@@ -4,6 +4,7 @@ import styles from '@/styles/Home.module.css'
 import { useEffect, useState } from 'react'
 import { GaslessOnboarding} from "@gelatonetwork/gasless-onboarding"
 import { CONTRACT_ABI, CONTRACT_ADDRESS } from '../constants/contractdata'
+import { GelatoRelay, SponsoredCallRequest } from "@gelatonetwork/relay-sdk";
 
 
 export default function Home() {
@@ -24,7 +25,7 @@ export default function Home() {
 
   const login = async() => {
     try{
-      const gaslessWalletConfig = process.env.NEXT_PUBLIC_GASLESSWALLET_KEY;
+      const gaslessWalletConfig = { apiKey: process.env.NEXT_PUBLIC_GASLESSWALLET_KEY};
       const loginConfig = {
         domains: ["http://localhost:3000/"],
         chain : {
@@ -56,8 +57,6 @@ export default function Home() {
       const balance = await result.json();
       setTokens(balance.data.items);
 
-
-
     } catch (err){
       console.error(err);
     }
@@ -65,22 +64,25 @@ export default function Home() {
 
   const mintNFT = async() => {
     try{
+      const relay = new GelatoRelay();
       let iface = new ethers.utils.Interface(CONTRACT_ABI);
-      let x = iface.encodeFunctionData("mintImage", [ url, toAddress ])
-      console.log(x)
+      let tx = iface.encodeFunctionData("mintImage", [ url, toAddress ])
+      console.log(tx)
 
-      const request = {
+      const request= {
         chainId: 80001,
         target: toAddress,
-        data: x,
+        data: tx,
+        user: walletAddress
       }
 
-      const taskId = await relay.sponsoredCall(request, process.env.NEXT_PUBLIC_GASLESSWALLET_KEY)
-
-      // const sponsoredCall 
+      const relayresponse = await relay.sponsoredCall(request, process.env.NEXT_PUBLIC_GASLESSWALLET_KEY)
+      const taskId = relayresponse.taskId;
+      console.log(gw);
+      // const apiKey = gw.apiKey();
       // const { taskId } = await gw.sponsorTransaction(
       //   CONTRACT_ADDRESS,
-      //   x,
+      //   tx,
       // );
 
       console.log(taskId)
