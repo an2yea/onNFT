@@ -1,7 +1,11 @@
 import Head from 'next/head'
 import {ethers} from 'ethers'
+import { Contract, providers, utils } from "ethers";
+
 import styles from '@/styles/Home.module.css'
-import { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState }  from 'react'
+// import Web3Modal from "web3modal";
+
 import { GaslessOnboarding} from "@gelatonetwork/gasless-onboarding"
 import { CONTRACT_ABI, CONTRACT_ADDRESS } from '../constants/contractdata'
 import { GelatoRelay, SponsoredCallRequest } from "@gelatonetwork/relay-sdk";
@@ -21,6 +25,7 @@ export default function Home() {
 
   useEffect(() => {
     login();
+    // connectWallet();
   },[])
 
   const login = async() => {
@@ -29,8 +34,8 @@ export default function Home() {
       const loginConfig = {
         domains: ["http://localhost:3000/"],
         chain : {
-          id: 80001,
-          rpcUrl: "https://polygon-mumbai.infura.io/v3/4458cf4d1689497b9a38b1d6bbf05e78",
+          id: 5,
+          rpcUrl: "https://rpc.ankr.com/eth_goerli",
         },
         openLogin: {
           redirectUrl: `http://localhost:3000/`,
@@ -53,7 +58,7 @@ export default function Home() {
       const address = gaslessWallet.getAddress();
       setWalletAddress(address);
 
-      const result = await fetch(`https://api.covalenthq.com/v1/80001/address/${address}/balances_v2/?key=${process.env.NEXT_PUBLIC_COVALENT_APIKEY}`);
+      const result = await fetch(`https://api.covalenthq.com/v1/5/address/${address}/balances_v2/?key=${process.env.NEXT_PUBLIC_COVALENT_APIKEY}`);
       const balance = await result.json();
       setTokens(balance.data.items);
 
@@ -66,24 +71,28 @@ export default function Home() {
     try{
       const relay = new GelatoRelay();
       let iface = new ethers.utils.Interface(CONTRACT_ABI);
-      let tx = iface.encodeFunctionData("mintImage", [ url, toAddress ])
+      let tokenURI = "ipfs://bafyreidrt5utdvnwonctnojcese7n2lzi4pkcvvtz7mw2ptijbtnb5sfya/metadata.json"
+      let recipient = toAddress;
+      console.log(recipient, tokenURI);
+
+      let tx = iface.encodeFunctionData("mintNFT", [ recipient, tokenURI ])
       console.log(tx)
 
-      const request= {
-        chainId: 80001,
-        target: toAddress,
-        data: tx,
-        user: walletAddress
-      }
+      // const request= {
+      //   chainId: 5,
+      //   target: toAddress,
+      //   data: tx,
+      //   user: walletAddress
+      // }
 
-      const relayresponse = await relay.sponsoredCall(request, process.env.NEXT_PUBLIC_GASLESSWALLET_KEY)
-      const taskId = relayresponse.taskId;
+      // const relayresponse = await relay.sponsoredCall(request, process.env.NEXT_PUBLIC_GASLESSWALLET_KEY)
+      // const taskId = relayresponse.taskId;
       console.log(gw);
       // const apiKey = gw.apiKey();
-      // const { taskId } = await gw.sponsorTransaction(
-      //   CONTRACT_ADDRESS,
-      //   tx,
-      // );
+      const { taskId } = await gw.sponsorTransaction(
+        CONTRACT_ADDRESS,
+        tx,
+      );
 
       console.log(taskId)
       setTaskid(taskId);
@@ -91,7 +100,7 @@ export default function Home() {
       console.log(error)
     }
   }
-
+  
   const logout = async() =>{
     await gobMethod.logout();
   }
@@ -136,3 +145,76 @@ export default function Home() {
     </>
   )
 }
+
+
+
+  // //
+  // const [walletConnected, setWalletConnected] = useState(false);
+  // const web3ModalRef = useRef();
+  // // ------------------
+
+  // const mintTest = async() =>{
+  //   try{
+  //     const signer = await getProviderOrSigner(true);
+
+  //     const nftContract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
+  //     const tx = await nftContract.mintNFT(toAddress, "ipfs://bafyreidrt5utdvnwonctnojcese7n2lzi4pkcvvtz7mw2ptijbtnb5sfya/metadata.json");
+  //     // setLoading(true);
+  //     await tx.wait();
+  //     // setLoading(false);
+  //     window.alert("You have successfully minted a test NFT!")
+  //   }
+
+  //   catch(err){
+  //     console.log(err);
+  //   }
+  // }
+
+  // const connectWallet = async () => {
+  //   try {
+  //     // Get the provider from web3Modal, which in our case is MetaMask
+  //     // When used for the first time, it prompts the user to connect their wallet
+  //     await getProviderOrSigner();
+  //     setWalletConnected(true);
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+  // };
+
+  // const getProviderOrSigner = async (needSigner = false) => {
+  //   // Connect to Metamask
+  //   // Since we store `web3Modal` as a reference, we need to access the `current` value to get access to the underlying object
+  //   const provider = await web3ModalRef.current.connect();
+  //   const web3Provider = new providers.Web3Provider(provider);
+
+  //   // If user is not connected to the Goerli network, let them know and throw an error
+  //   const { chainId } = await web3Provider.getNetwork();
+  //   if (chainId !== 5) {
+  //     window.alert("Change the network to Goerli");
+  //     throw new Error("Change network to Goerli");
+  //   }
+
+  //   if (needSigner) {
+  //     const signer = web3Provider.getSigner();
+  //     return signer;
+  //   }
+  //   return web3Provider;
+  // };
+
+  // // useEffect(() => {
+  // //   // if wallet is not connected, create a new instance of Web3Modal and connect the MetaMask wallet
+  // //   if (!walletConnected) {
+  // //     // Assign the Web3Modal class to the reference object by setting it's `current` value
+  // //     // The `current` value is persisted throughout as long as this page is open
+  // //     web3ModalRef.current = new Web3Modal({
+  // //       network: "PolygonMumbai",
+  // //       providerOptions: {},
+  // //       disableInjectedProvider: false,
+  // //     });
+  // //     connectWallet();
+  // //   }
+  // // }, [walletConnected]);
+
+  // // -------------------
+  
