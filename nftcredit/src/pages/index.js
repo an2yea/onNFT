@@ -1,23 +1,35 @@
-import { Inter } from 'next/font/google'
+import Head from 'next/head'
+import {ethers} from 'ethers'
 import styles from '@/styles/Home.module.css'
+import { useEffect, useState } from 'react'
+import { GaslessOnboarding} from "@gelatonetwork/gasless-onboarding"
+import { CONTRACT_ABI, CONTRACT_ADDRESS } from '../constants/contractdata'
 
-import {
-  GaslessOnboarding,
-  GaslessWalletConfig,
-  GaslessWalletInterface,
-  LoginConfig
-} from "@gelatonetwork/gasless-onboarding"
 
 export default function Home() {
+
+  const [walletAddress, setWalletAddress] = useState();
+  const [tokens, setTokens] = useState([]);
+  const [loggedIn, setloggedIn] = useState(false);
+  const [url, setURL] = useState("");
+  const [gobMethod, setGOBMethod] = useState(null);
+  const [gw, setGW] = useState();
+  const [toAddress, setToAddress] = useState("");
+  const [taskid, setTaskid] = useState("");
+
+
+  useEffect(() => {
+    login();
+  },[])
 
   const login = async() => {
     try{
       const gaslessWalletConfig = process.env.NEXT_PUBLIC_GASLESSWALLET_KEY;
       const loginConfig = {
-        domains: ["http://localhost:8000/"],
+        domains: ["http://localhost:3000/"],
         chain : {
-          id: 8001,
-          rpcUrl: "https://rpc-mumbai.maticvigil.com/",
+          id: 80001,
+          rpcUrl: "https://polygon-mumbai.infura.io/v3/4458cf4d1689497b9a38b1d6bbf05e78",
         },
         openLogin: {
           redirectUrl: `http://localhost:3000/`,
@@ -30,13 +42,64 @@ export default function Home() {
       
       await gaslessOnboarding.init();
       const web3AuthProvider = await gaslessOnboarding.login();
-
+      setloggedIn(true);
       console.log("Web3 Auth Provider", web3AuthProvider);
-    
+      setGOBMethod(gaslessOnboarding);
+
+      const gaslessWallet = gaslessOnboarding.getGaslessWallet();
+      setGW(gaslessWallet);
+
+      const address = gaslessWallet.getAddress();
+      setWalletAddress(address);
+
+      const result = await fetch(`https://api.covalenthq.com/v1/80001/address/${address}/balances_v2/?key=${process.env.NEXT_PUBLIC_COVALENT_APIKEY}`);
+      const balance = await result.json();
+      setTokens(balance.data.items);
+
+
 
     } catch (err){
       console.error(err);
     }
+  }
+
+  const mintNFT = async() => {
+    try{
+      let iface = new ethers.utils.Interface(CONTRACT_ABI);
+      let x = iface.encodeFunctionData("mintImage", [ url, toAddress ])
+      console.log(x)
+
+      const request = {
+        chainId: 80001,
+        target: toAddress,
+        data: x,
+      }
+
+      const taskId = await relay.sponsoredCall(request, process.env.NEXT_PUBLIC_GASLESSWALLET_KEY)
+
+      // const sponsoredCall 
+      // const { taskId } = await gw.sponsorTransaction(
+      //   CONTRACT_ADDRESS,
+      //   x,
+      // );
+
+      console.log(taskId)
+      setTaskid(taskId);
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const logout = async() =>{
+    await gobMethod.logout();
+  }
+
+  const renderButton = () => {
+    if(!loggedIn){
+      return <button onClick={login}> Login </button>
+    }
+    else{
+        return <button onClick={logout}>Log Out</button>} 
   }
   return (
     <>
@@ -48,7 +111,24 @@ export default function Home() {
       </Head>
       <main className={styles.main}> 
         <h1> NFT Credit using Gasless Wallet</h1>
-        <button onClick={login}> Login </button>
+        {walletAddress && <p>{walletAddress}</p>}
+        <h2> Your Current Balance </h2>
+        {tokens.map(token => (
+          <div key={token.contract_name}>
+            <img src={token.logo_url} alt="token" />
+            <p>{token.balance / (10 ** token.contract_decimals)} {token.contract_ticker_symbol}</p>
+          </div>
+        ))}
+
+        <form>
+          <label> URL </label> 
+          <input value={url} onChange={(e) => setURL(e.target.value)} /> <br></br>
+          <label> toAddress </label>
+          <input value={toAddress} onChange={(e) => setToAddress(e.target.value)} />
+        </form>
+        <button onClick={mintNFT}> Mint NFT</button>
+        <p> Task Id {taskid}</p>
+        {renderButton()}
       </main>
     
     </>
