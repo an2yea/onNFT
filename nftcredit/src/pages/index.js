@@ -2,6 +2,10 @@ import Head from 'next/head'
 import Script from 'next/script'
 import {ethers} from 'ethers'
 import { Contract, providers, utils } from "ethers";
+import Button from '@mui/material/Button';
+import AppBar from '@mui/material/AppBar';
+import Typography from '@mui/material/Typography'
+import Toolbar from '@mui/material/Toolbar'
 
 import { SafeOnRampKit, SafeOnRampProviderType } from '@safe-global/onramp-kit'
 
@@ -14,6 +18,7 @@ import { CONTRACT_ABI, CONTRACT_ADDRESS } from '../constants/contractdata'
 import { GelatoRelay, SponsoredCallRequest } from "@gelatonetwork/relay-sdk";
 
 
+
 export default function Home() {
 
   const [walletAddress, setWalletAddress] = useState();
@@ -23,9 +28,23 @@ export default function Home() {
   const [gobMethod, setGOBMethod] = useState(null);
   const [gw, setGW] = useState();
   const [toAddress, setToAddress] = useState("");
-  const [taskid, setTaskid] = useState("");
+  const [taskId, setTaskId] = useState("");
+  const [taskStatus, setTaskStatus] = useState("");
 
 
+  
+  // useEffect(() => {
+  //   let intervalId = setInterval(() => {
+  //     fetch(`https://relay.gelato.digital/tasks/status/${taskId}`)
+  //     .then(response => response.json)
+  //     .then(data => setTaskStatus(data.taskStatus));
+  //     console.log(taskStatus);
+  //   },2000);
+  
+  //   if(taskStatus == "ExecSuccess"){
+  //     clearInterval(intervalId);
+  //   }
+  // },[taskId]);
   
   const initOnramp = async () => {
     const safeOnRamp = await SafeOnRampKit.init(SafeOnRampProviderType.Stripe, {
@@ -52,15 +71,14 @@ export default function Home() {
     console.log(sessionData);
 
   }
-  useEffect(() => {
-    login();
-    // initOnramp();
-    // connectWallet();
-  },[])
+
+  
 
   // useEffect(() => {
-    // if(loggedIn)initOnramp();
-  // }, [loggedIn])
+  //   login();
+  //   // initOnramp();
+  //   // connectWallet();
+  // },[])
 
   const login = async() => {
     try{
@@ -105,23 +123,24 @@ export default function Home() {
 
   const mintNFT = async() => {
     try{
-      const relay = new GelatoRelay();
-      let iface = new ethers.utils.Interface(CONTRACT_ABI);
-      let tokenURI = "ipfs://bafyreidrt5utdvnwonctnojcese7n2lzi4pkcvvtz7mw2ptijbtnb5sfya/metadata.json"
-      let recipient = toAddress;
-      console.log(recipient, tokenURI);
+      // const relay = new GelatoRelay();
+      // let iface = new ethers.utils.Interface(CONTRACT_ABI);
+      // let tokenURI = "ipfs://bafyreidrt5utdvnwonctnojcese7n2lzi4pkcvvtz7mw2ptijbtnb5sfya/metadata.json"
+      // let recipient = toAddress;
+      // console.log(recipient, tokenURI);
       
-      let tx = iface.encodeFunctionData("mintNFT", [ recipient, tokenURI ])
+      // let tx = iface.encodeFunctionData("mintNFT", [ recipient, tokenURI ])
       
-      console.log(tx)
-      console.log(gw);
-      // const apiKey = gw.apiKey();
-      const temp = await gw.sponsorTransaction(
-        CONTRACT_ADDRESS,
-        tx,
-        ethers.utils.parseEther("0.002")
-      );
+      // console.log(tx)
+      // console.log(gw);
+      // // const apiKey = gw.apiKey();
+      // const temp = await gw.sponsorTransaction(
+      //   CONTRACT_ADDRESS,
+      //   tx,
+      //   ethers.utils.parseEther("0.002")
+      // );
 
+      //TODO: render TASK Id afer fetching -> the status of the request
       // let val = {value: ethers.utils.parseEther("0.001")}
       // const provider = new ethers.providers.Web3Provider(window.ethereum);
       // const signer = provider.getSigner();
@@ -138,10 +157,19 @@ export default function Home() {
 
       // const relayresponse = await relay.sponsoredCall(request, process.env.NEXT_PUBLIC_GASLESSWALLET_KEY)
       // const taskId = relayresponse.taskId;
+      // console.log(temp)
+      // setTaskId(temp.taskId);
+      setTaskId("0x8126409bfcae6dc2513e9fd1cfd285b8e7f509c248d0b22666c8f27b38e89922");
+      console.log(taskId);
+    
+    const fetchStatus = () => {
+        fetch(`https://relay.gelato.digital/tasks/status/${taskId}`)
+        .then(response => response.json)
+         .then(data => setTaskStatus(data.taskStatus));
+      console.log(taskStatus);
+      }
+    console.log(fetchStatus());
 
-
-      console.log(temp)
-      setTaskid(temp.taskId);
     } catch (error) {
       console.log(error)
     }
@@ -159,6 +187,23 @@ export default function Home() {
         return <button onClick={logout}>Log Out</button>} 
   }
 
+  const renderForm = () => {
+    if(loggedIn) {
+      return <>
+      <form>
+          {/* <label> URL </label>  */}
+          {/* <input value={url} onChange={(e) => setURL(e.target.value)} /> <br></br> */}
+          <label> toAddress </label>
+          <input value={toAddress} onChange={(e) => setToAddress(e.target.value)} />
+        </form>
+        <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              sx={{ mt: 3, mb: 2 }} onClick={mintNFT}> Mint NFT</Button></>
+    }
+  }
+
 
   return (
     <>
@@ -168,6 +213,12 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
+      <AppBar position="static">
+        <Toolbar variant="regular">
+            <Typography> onNFT</Typography>  
+            {renderButton()}
+        </Toolbar>
+      </AppBar>
       <main className={styles.main}> 
         <h1> NFT Credit using Gasless Wallet</h1>
         <div id='stripe-root'></div>
@@ -180,15 +231,10 @@ export default function Home() {
           </div>
         ))}
 
-        <form>
-          <label> URL </label> 
-          <input value={url} onChange={(e) => setURL(e.target.value)} /> <br></br>
-          <label> toAddress </label>
-          <input value={toAddress} onChange={(e) => setToAddress(e.target.value)} />
-        </form>
-        <button onClick={mintNFT}> Mint NFT</button>
-        <p> Task Id {taskid}</p>
-        {renderButton()}
+        {renderForm()}
+
+        
+        <p> Task Id {taskId}</p>
       </main>
     
     </>
