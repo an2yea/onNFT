@@ -1,6 +1,9 @@
 import Head from 'next/head'
+import Script from 'next/script'
 import {ethers} from 'ethers'
 import { Contract, providers, utils } from "ethers";
+
+import { SafeOnRampKit, SafeOnRampProviderType } from '@safe-global/onramp-kit'
 
 import styles from '@/styles/Home.module.css'
 import React, { useEffect, useRef, useState }  from 'react'
@@ -23,10 +26,41 @@ export default function Home() {
   const [taskid, setTaskid] = useState("");
 
 
+  
+  const initOnramp = async () => {
+    const safeOnRamp = await SafeOnRampKit.init(SafeOnRampProviderType.Stripe, {
+      onRampProviderConfig: {
+        stripePublicKey:
+          'pk_test_51MZbmZKSn9ArdBimSyl5i8DqfcnlhyhJHD8bF2wKrGkpvNWyPvBAYtE211oHda0X3Ea1n4e9J9nh2JkpC7Sxm5a200Ug9ijfoO', // Safe public key
+        onRampBackendUrl: 'https://aa-stripe.safe.global', // Safe deployed server
+      },
+    });
+
+    const sessionData = await safeOnRamp.open({
+      walletAddress: "0xd397c7C9dE1f32A3Be31f7EEC9e492504b9dD31D",
+      networks: ['ethereum'],
+      element: '#stripe-root',
+      // sessionId: 'cos_1Mei3cKSn9ArdBimJhkCt1XC', // Optional, if you want to use a specific created session
+      events: {
+        onLoaded: () => console.log('Loaded'),
+        onPaymentSuccessful: () => console.log('Payment successful'),
+        onPaymentError: () => console.log('Payment failed'),
+        onPaymentProcessing: () => console.log('Payment processing')
+      }
+    })
+
+    console.log(sessionData);
+
+  }
   useEffect(() => {
     login();
+    // initOnramp();
     // connectWallet();
   },[])
+
+  // useEffect(() => {
+    // if(loggedIn)initOnramp();
+  // }, [loggedIn])
 
   const login = async() => {
     try{
@@ -54,6 +88,7 @@ export default function Home() {
 
       const gaslessWallet = gaslessOnboarding.getGaslessWallet();
       setGW(gaslessWallet);
+      console.log("wallet is", gaslessWallet)
 
       const address = gaslessWallet.getAddress();
       setWalletAddress(address);
@@ -67,6 +102,7 @@ export default function Home() {
     }
   }
 
+
   const mintNFT = async() => {
     try{
       const relay = new GelatoRelay();
@@ -74,9 +110,24 @@ export default function Home() {
       let tokenURI = "ipfs://bafyreidrt5utdvnwonctnojcese7n2lzi4pkcvvtz7mw2ptijbtnb5sfya/metadata.json"
       let recipient = toAddress;
       console.log(recipient, tokenURI);
-
+      
       let tx = iface.encodeFunctionData("mintNFT", [ recipient, tokenURI ])
+      
       console.log(tx)
+      console.log(gw);
+      // const apiKey = gw.apiKey();
+      const temp = await gw.sponsorTransaction(
+        CONTRACT_ADDRESS,
+        tx,
+        ethers.utils.parseEther("0.002")
+      );
+
+      // let val = {value: ethers.utils.parseEther("0.001")}
+      // const provider = new ethers.providers.Web3Provider(window.ethereum);
+      // const signer = provider.getSigner();
+
+      // const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+      // const { data } = await contract.populateTransaction.mintNFT(recipient, tokenURI);
 
       // const request= {
       //   chainId: 5,
@@ -87,15 +138,10 @@ export default function Home() {
 
       // const relayresponse = await relay.sponsoredCall(request, process.env.NEXT_PUBLIC_GASLESSWALLET_KEY)
       // const taskId = relayresponse.taskId;
-      console.log(gw);
-      // const apiKey = gw.apiKey();
-      const { taskId } = await gw.sponsorTransaction(
-        CONTRACT_ADDRESS,
-        tx,
-      );
 
-      console.log(taskId)
-      setTaskid(taskId);
+
+      console.log(temp)
+      setTaskid(temp.taskId);
     } catch (error) {
       console.log(error)
     }
@@ -112,6 +158,8 @@ export default function Home() {
     else{
         return <button onClick={logout}>Log Out</button>} 
   }
+
+
   return (
     <>
       <Head>
@@ -122,6 +170,7 @@ export default function Home() {
       </Head>
       <main className={styles.main}> 
         <h1> NFT Credit using Gasless Wallet</h1>
+        <div id='stripe-root'></div>
         {walletAddress && <p>{walletAddress}</p>}
         <h2> Your Current Balance </h2>
         {tokens.map(token => (
@@ -147,6 +196,31 @@ export default function Home() {
 }
 
 
+
+  // ----------------  GELATO relay
+
+    
+  // const mintRelay = async() => {
+  //   const relay = new GelatoRelay();  
+
+  //   let tokenURI = "ipfs://bafyreidrt5utdvnwonctnojcese7n2lzi4pkcvvtz7mw2ptijbtnb5sfya/metadata.json"
+  //   let recipient = toAddress;
+
+
+  //   // Populate a relay request
+  //     const request = {
+  //     chainId: provider.network.chainId,
+  //     target: counter,
+  //     data: data,
+  //     };
+
+  //   // Without a specific API key, the relay request will fail! 
+  //   // Go to https://relay.gelato.network to get a testnet API key with 1Balance.
+  //   // Send the relay request using Gelato Relay!
+  //   const relayResponse = await relay.sponsoredCall(request, apiKey);
+  // }
+    
+  //
 
   // //
   // const [walletConnected, setWalletConnected] = useState(false);
