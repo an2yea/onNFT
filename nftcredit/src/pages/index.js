@@ -6,6 +6,7 @@ import Button from '@mui/material/Button';
 import AppBar from '@mui/material/AppBar';
 import Typography from '@mui/material/Typography'
 import Toolbar from '@mui/material/Toolbar'
+import Alert from '@mui/material/Alert'
 
 import { SafeOnRampKit, SafeOnRampProviderType } from '@safe-global/onramp-kit'
 
@@ -30,21 +31,7 @@ export default function Home() {
   const [toAddress, setToAddress] = useState("");
   const [taskId, setTaskId] = useState("");
   const [taskStatus, setTaskStatus] = useState("");
-
-
-  
-  // useEffect(() => {
-  //   let intervalId = setInterval(() => {
-  //     fetch(`https://relay.gelato.digital/tasks/status/${taskId}`)
-  //     .then(response => response.json)
-  //     .then(data => setTaskStatus(data.taskStatus));
-  //     console.log(taskStatus);
-  //   },2000);
-  
-  //   if(taskStatus == "ExecSuccess"){
-  //     clearInterval(intervalId);
-  //   }
-  // },[taskId]);
+  const [task, setTask] = useState();
   
   const initOnramp = async () => {
     const safeOnRamp = await SafeOnRampKit.init(SafeOnRampProviderType.Stripe, {
@@ -72,14 +59,6 @@ export default function Home() {
 
   }
 
-  
-
-  // useEffect(() => {
-  //   login();
-  //   // initOnramp();
-  //   // connectWallet();
-  // },[])
-
   const login = async() => {
     try{
       const gaslessWalletConfig = { apiKey: process.env.NEXT_PUBLIC_GASLESSWALLET_KEY};
@@ -106,7 +85,7 @@ export default function Home() {
 
       const gaslessWallet = gaslessOnboarding.getGaslessWallet();
       setGW(gaslessWallet);
-      console.log("wallet is", gaslessWallet)
+      console.log("Wallet is", gaslessWallet)
 
       const address = gaslessWallet.getAddress();
       setWalletAddress(address);
@@ -120,6 +99,39 @@ export default function Home() {
     }
   }
 
+  const renderAlert = (taskStatus) => {
+    console.log("TaskStatus is", taskStatus);
+    switch(taskStatus){
+      case 'CheckPending':
+        return <Alert severity='info'> The Request is being processed (check pending)</Alert>
+      case 'ExecPending':
+        return <Alert severity='info'> The Request is being processed (execution pending) </Alert>
+      case 'WaitingForConfirmation':
+        return <Alert severity='info'> The Request is being processed (confirmation waiting)</Alert>
+      case 'ExecSuccess':
+        return <Alert severity='success'> The Request was successful </Alert>
+      case 'Cancelled':
+        console.log("Cancelled switch")
+        return <Alert severity='error'> The Request was Cancelled </Alert>
+      case 'ExecReverted':
+        return <Alert severity='warning'> The request was Reverted </Alert>
+
+    }
+  }
+
+  useEffect(() => {
+    console.log(taskStatus);
+    renderAlert(taskStatus);
+  }, [taskStatus]);
+
+  useEffect(() => {
+    if(taskId){
+    console.log("Task Id is", taskId);
+    fetch(`https://relay.gelato.digital/tasks/status/${taskId}`)
+    .then(response => response.json())
+    .then(task => setTaskStatus(task.task.taskState));
+    }
+  }, [taskId])
 
   const mintNFT = async() => {
     try{
@@ -133,43 +145,16 @@ export default function Home() {
       
       // console.log(tx)
       // console.log(gw);
-      // // const apiKey = gw.apiKey();
       // const temp = await gw.sponsorTransaction(
       //   CONTRACT_ADDRESS,
       //   tx,
       //   ethers.utils.parseEther("0.002")
       // );
+      //console.log(temp)
 
       //TODO: render TASK Id afer fetching -> the status of the request
-      // let val = {value: ethers.utils.parseEther("0.001")}
-      // const provider = new ethers.providers.Web3Provider(window.ethereum);
-      // const signer = provider.getSigner();
-
-      // const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-      // const { data } = await contract.populateTransaction.mintNFT(recipient, tokenURI);
-
-      // const request= {
-      //   chainId: 5,
-      //   target: toAddress,
-      //   data: tx,
-      //   user: walletAddress
-      // }
-
-      // const relayresponse = await relay.sponsoredCall(request, process.env.NEXT_PUBLIC_GASLESSWALLET_KEY)
-      // const taskId = relayresponse.taskId;
-      // console.log(temp)
-      // setTaskId(temp.taskId);
+      // setTaskId(temp.taskId, console.log(taskId));
       setTaskId("0x8126409bfcae6dc2513e9fd1cfd285b8e7f509c248d0b22666c8f27b38e89922");
-      console.log(taskId);
-    
-    const fetchStatus = () => {
-        fetch(`https://relay.gelato.digital/tasks/status/${taskId}`)
-        .then(response => response.json)
-         .then(data => setTaskStatus(data.taskStatus));
-      console.log(taskStatus);
-      }
-    console.log(fetchStatus());
-
     } catch (error) {
       console.log(error)
     }
@@ -338,3 +323,20 @@ export default function Home() {
 
   // // -------------------
   
+  // ---------------> Gelato Relay
+     // let val = {value: ethers.utils.parseEther("0.001")}
+      // const provider = new ethers.providers.Web3Provider(window.ethereum);
+      // const signer = provider.getSigner();
+
+      // const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+      // const { data } = await contract.populateTransaction.mintNFT(recipient, tokenURI);
+
+      // const request= {
+      //   chainId: 5,
+      //   target: toAddress,
+      //   data: tx,
+      //   user: walletAddress
+      // }
+
+      // const relayresponse = await relay.sponsoredCall(request, process.env.NEXT_PUBLIC_GASLESSWALLET_KEY)
+      // const taskId = relayresponse.taskId;
