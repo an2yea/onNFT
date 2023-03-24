@@ -46,6 +46,7 @@ export default function Home() {
   const [taskStatus, setTaskStatus] = useState("");
   const [anchorElement, setAnchorElement] = useState(null);
   const [balanceDialog, setBalanceDialog] = useState(false);
+ 
 
   const open = Boolean(anchorElement)
   const handleClick = (e) => {
@@ -86,8 +87,11 @@ export default function Home() {
 
   }
   
-
+  useEffect(()=>{
+    login();
+  }, [])
   const login = async() => {
+    
     try{
       setLoading(true);
       const gaslessWalletConfig = { apiKey: process.env.NEXT_PUBLIC_GASLESSWALLET_KEY};
