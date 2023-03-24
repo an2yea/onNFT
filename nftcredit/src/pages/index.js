@@ -38,7 +38,6 @@ export default function Home() {
 
   const [walletAddress, setWalletAddress] = useState();
   const [tokens, setTokens] = useState([]);
-  const [loggedIn, setloggedIn] = useState(false);
   const [gobMethod, setGOBMethod] = useState(null);
   const [gw, setGW] = useState();
   const [loading, setLoading] = useState(false);
@@ -55,6 +54,10 @@ export default function Home() {
 
   const handleClose = () => {
     setAnchorElement(null);
+  }
+  const handleClickLogout = () => {
+    setAnchorElement(false);
+    logout();
   }
 
   const initOnramp = async () => {
@@ -83,9 +86,6 @@ export default function Home() {
 
   }
   
-  // useEffect(() => {
-    // if(loggedIn)initOnramp();
-  // }, [loggedIn])
 
   const login = async() => {
     try{
@@ -108,7 +108,6 @@ export default function Home() {
       
       await gaslessOnboarding.init();
       const web3AuthProvider = await gaslessOnboarding.login();
-      setloggedIn(true);
       setLoading(false);
       console.log("Web3 Auth Provider", web3AuthProvider);
       setGOBMethod(gaslessOnboarding);
@@ -229,13 +228,12 @@ export default function Home() {
   const logout = async() =>{
     setLoading(true);
     await gobMethod.logout();
-    setloggedIn(false);
     setWalletAddress();
     setLoading(false);
   }
 
   const renderButton = () => {
-    if(!loggedIn){
+    if(!walletAddress){
       return <Button color="inherit" onClick={login}> Login </Button>
     }
     else{
@@ -260,7 +258,7 @@ export default function Home() {
     }
   }
   const renderTask = () => {
-    if(loggedIn && taskId){
+    if(walletAddress && taskId){
       return <> Task Id: {taskId}</>
     }
   }
@@ -285,7 +283,7 @@ export default function Home() {
           {renderButton()}
         </Stack>
         <Menu id="account-menu" anchorEl={anchorElement} open={open} MenuListProps ={{'aria-labelledby' : 'account-button,'}} onClose ={handleClose} >
-          <MenuItem onClick={logout}> Log Out </MenuItem>
+          <MenuItem onClick={handleClickLogout}> Log Out </MenuItem>
           <MenuItem onClick={() => setBalanceDialog(true)}> Check Balance </MenuItem>
         </Menu>
         <Dialog open= {balanceDialog} onClose = {() => setBalanceDialog(false)}aria-labelledby='dialog-title' aria-describedby='dialog-desc'>
