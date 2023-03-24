@@ -2,9 +2,11 @@ import Head from 'next/head'
 import Script from 'next/script'
 import {ethers} from 'ethers'
 import { Contract, providers, utils } from "ethers";
+import Backdrop from '@mui/material/Backdrop';
+import CircularProgress from '@mui/material/CircularProgress';
 import {
   AppBar,
-  Toolbar,
+Toolbar,
   IconButton,
   Typography,
   Button,
@@ -36,15 +38,15 @@ export default function Home() {
 
   const [walletAddress, setWalletAddress] = useState();
   const [tokens, setTokens] = useState([]);
-  const [loggedIn, setloggedIn] = useState(false);
-  const [url, setURL] = useState("");
   const [gobMethod, setGOBMethod] = useState(null);
   const [gw, setGW] = useState();
+  const [loading, setLoading] = useState(false);
   const [toAddress, setToAddress] = useState("");
   const [taskId, setTaskId] = useState("");
   const [taskStatus, setTaskStatus] = useState("");
   const [anchorElement, setAnchorElement] = useState(null);
   const [balanceDialog, setBalanceDialog] = useState(false);
+ 
 
   const open = Boolean(anchorElement)
   const handleClick = (e) => {
@@ -54,6 +56,11 @@ export default function Home() {
   const handleClose = () => {
     setAnchorElement(null);
   }
+  const handleClickLogout = () => {
+    setAnchorElement(false);
+    logout();
+  }
+
   const initOnramp = async () => {
     const safeOnRamp = await SafeOnRampKit.init(SafeOnRampProviderType.Stripe, {
       onRampProviderConfig: {
@@ -79,18 +86,14 @@ export default function Home() {
     console.log(sessionData);
 
   }
-  useEffect(() => {
+  
+  useEffect(()=>{
     login();
-    // initOnramp();
-    // connectWallet();
-  },[])
-
-  // useEffect(() => {
-    // if(loggedIn)initOnramp();
-  // }, [loggedIn])
-
+  }, [])
   const login = async() => {
+    
     try{
+      setLoading(true);
       const gaslessWalletConfig = { apiKey: process.env.NEXT_PUBLIC_GASLESSWALLET_KEY};
       const loginConfig = {
         domains: ["http://localhost:3000/"],
@@ -109,7 +112,7 @@ export default function Home() {
       
       await gaslessOnboarding.init();
       const web3AuthProvider = await gaslessOnboarding.login();
-      setloggedIn(true);
+      setLoading(false);
       console.log("Web3 Auth Provider", web3AuthProvider);
       setGOBMethod(gaslessOnboarding);
 
@@ -129,42 +132,75 @@ export default function Home() {
     }
   }
 
-  const renderAlert = (taskStatus) => {
+  const renderAlert = () => {
     console.log("TaskStatus is", taskStatus);
+    // console.log("here in renderAlert")
     switch(taskStatus){
+      case 'Initialised':
+        return <Alert severity='info'> Request created</Alert>
       case 'CheckPending':
         return <Alert severity='info'> The Request is being processed (check pending)</Alert>
       case 'ExecPending':
         return <Alert severity='info'> The Request is being processed (execution pending) </Alert>
       case 'WaitingForConfirmation':
-        return <Alert severity='info'> The Request is being processed (confirmation waiting)</Alert>
+        return <Alert severity='info'> The Request is being processed (waiting for confirmation)</Alert>
       case 'ExecSuccess':
         return <Alert severity='success'> The Request was successful </Alert>
       case 'Cancelled':
-        console.log("Cancelled switch")
         return <Alert severity='error'> The Request was Cancelled </Alert>
       case 'ExecReverted':
         return <Alert severity='warning'> The request was Reverted </Alert>
+      // default: return <Alert severity='info'> WAITTTTT</Alert>
 
     }
   }
-
   useEffect(() => {
-    console.log(taskStatus);
-    renderAlert(taskStatus);
-  }, [taskStatus]);
 
-  useEffect(() => {
     if(taskId){
-    console.log("Task Id is", taskId);
-    fetch(`https://relay.gelato.digital/tasks/status/${taskId}`)
-    .then(response => response.json())
-    .then(task => setTaskStatus(task.task.taskState));
+
+       let call = setInterval(() => 
+    {
+        console.log("Task Id is", taskId);
+        try{
+          fetch(`https://relay.gelato.digital/tasks/status/${taskId}`)
+        .then(response => response.json())
+        .then(task => {
+          
+          if(task.task != undefined){
+            setTaskStatus(task.task.taskState)
+            console.log("Task status inside interval is", task.task.taskStatus);
+            console.log("State access inside useeffect", taskStatus)
+            if(task.task.taskState == 'Cancelled' || task.task.taskState == 'ExecSuccess')clearInterval(call)
+          }
+        });
+        }
+        catch(err){
+          
+          setTaskStatus('Initialised')
+        }
+        
+    }, 1500);
     }
   }, [taskId])
 
+  // var possTaskStatus= ["CheckPending", "ExecPeding", "WaitingForConfirmation", "ExecSuccess", "Cancelled","ExecReverted"];
+  // useEffect(() => {
+  //   setInterval(() => 
+  //   {
+  //       setTaskStatus("CheckPending");
+  //   }, 1000);
+  // }, []);
+
+  useEffect(() => {
+    console.log('Task status was changed', taskStatus);
+    renderAlert();
+  }, [taskStatus]);
+
+  
+
   const mintNFT = async() => {
     try{
+      setLoading(true);
       const relay = new GelatoRelay();
       let iface = new ethers.utils.Interface(CONTRACT_ABI);
       let tokenURI = "ipfs://bafyreidrt5utdvnwonctnojcese7n2lzi4pkcvvtz7mw2ptijbtnb5sfya/metadata.json"
@@ -182,20 +218,26 @@ export default function Home() {
       );
       console.log(temp)
 
-      //TODO: render TASK Id afer fetching -> the status of the request
+      // //TODO: render TASK Id afer fetching -> the status of the request
       setTaskId(temp.taskId, console.log(taskId));
-      // setTaskId("0x8126409bfcae6dc2513e9fd1cfd285b8e7f509c248d0b22666c8f27b38e89922");
+      setLoading(false);
+      //setTaskId("0x8126409bfcae6dc2513e9fd1cfd285b8e7f509c248d0b22666c8f27b38e89922");
+      return <> Task Id : {taskId}</>
+      
     } catch (error) {
       console.log(error)
     }
   }
   
   const logout = async() =>{
+    setLoading(true);
     await gobMethod.logout();
+    setWalletAddress();
+    setLoading(false);
   }
 
   const renderButton = () => {
-    if(!loggedIn){
+    if(!walletAddress){
       return <Button color="inherit" onClick={login}> Login </Button>
     }
     else{
@@ -219,9 +261,10 @@ export default function Home() {
               sx={{ mt: 3, mb: 2 }} onClick={mintNFT}> Mint NFT</Button></>
     }
   }
-
-  const handleBalance = () => {
-    
+  const renderTask = () => {
+    if(walletAddress && taskId){
+      return <> Task Id: {taskId}</>
+    }
   }
 
   return (
@@ -244,7 +287,7 @@ export default function Home() {
           {renderButton()}
         </Stack>
         <Menu id="account-menu" anchorEl={anchorElement} open={open} MenuListProps ={{'aria-labelledby' : 'account-button,'}} onClose ={handleClose} >
-          <MenuItem onClick={logout}> Log Out </MenuItem>
+          <MenuItem onClick={handleClickLogout}> Log Out </MenuItem>
           <MenuItem onClick={() => setBalanceDialog(true)}> Check Balance </MenuItem>
         </Menu>
         <Dialog open= {balanceDialog} onClose = {() => setBalanceDialog(false)}aria-labelledby='dialog-title' aria-describedby='dialog-desc'>
@@ -269,14 +312,16 @@ export default function Home() {
       <main className={styles.main}> 
         <h1> NFT Credit using Gasless Wallet</h1>
         <div id='stripe-root'></div>
-        {walletAddress && <p>{walletAddress}</p>}
-        <h2> Your Current Balance </h2>
-        
+        {walletAddress && <p>{walletAddress}</p>}        
 
         {renderForm()}
-
-        
-        <p> Task Id {taskId}</p>
+        {renderTask()}
+        {renderAlert()}
+       
+        <Backdrop
+        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        open={loading}>
+        <CircularProgress color="inherit" /></Backdrop>
       </main>
     
     </>
