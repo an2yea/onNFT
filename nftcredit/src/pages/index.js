@@ -2,11 +2,19 @@ import Head from 'next/head'
 import Script from 'next/script'
 import {ethers} from 'ethers'
 import { Contract, providers, utils } from "ethers";
-import Button from '@mui/material/Button';
-import AppBar from '@mui/material/AppBar';
-import Typography from '@mui/material/Typography'
-import Toolbar from '@mui/material/Toolbar'
-import Alert from '@mui/material/Alert'
+import {
+  AppBar,
+  Toolbar,
+  IconButton,
+  Typography,
+  Button,
+  Stack,
+  Alert,
+  Menu,
+  MenuItem
+} from '@mui/material'
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
+import SellIcon from '@mui/icons-material/Sell';
 
 import { SafeOnRampKit, SafeOnRampProviderType } from '@safe-global/onramp-kit'
 
@@ -31,8 +39,16 @@ export default function Home() {
   const [toAddress, setToAddress] = useState("");
   const [taskId, setTaskId] = useState("");
   const [taskStatus, setTaskStatus] = useState("");
-  const [task, setTask] = useState();
-  
+  const [anchorElement, setAnchorElement] = useState(null);
+
+  const open = Boolean(anchorElement)
+  const handleClick = (e) => {
+    setAnchorElement(e.currentTarget);
+  }
+
+  const handleClose = () => {
+    setAnchorElement(null);
+  }
   const initOnramp = async () => {
     const safeOnRamp = await SafeOnRampKit.init(SafeOnRampProviderType.Stripe, {
       onRampProviderConfig: {
@@ -135,26 +151,26 @@ export default function Home() {
 
   const mintNFT = async() => {
     try{
-      // const relay = new GelatoRelay();
-      // let iface = new ethers.utils.Interface(CONTRACT_ABI);
-      // let tokenURI = "ipfs://bafyreidrt5utdvnwonctnojcese7n2lzi4pkcvvtz7mw2ptijbtnb5sfya/metadata.json"
-      // let recipient = toAddress;
-      // console.log(recipient, tokenURI);
+      const relay = new GelatoRelay();
+      let iface = new ethers.utils.Interface(CONTRACT_ABI);
+      let tokenURI = "ipfs://bafyreidrt5utdvnwonctnojcese7n2lzi4pkcvvtz7mw2ptijbtnb5sfya/metadata.json"
+      let recipient = toAddress;
+      console.log(recipient, tokenURI);
       
-      // let tx = iface.encodeFunctionData("mintNFT", [ recipient, tokenURI ])
+      let tx = iface.encodeFunctionData("mintNFT", [ recipient, tokenURI ])
       
-      // console.log(tx)
-      // console.log(gw);
-      // const temp = await gw.sponsorTransaction(
-      //   CONTRACT_ADDRESS,
-      //   tx,
-      //   ethers.utils.parseEther("0.002")
-      // );
-      //console.log(temp)
+      console.log(tx)
+      console.log(gw);
+      const temp = await gw.sponsorTransaction(
+        CONTRACT_ADDRESS,
+        tx,
+        ethers.utils.parseEther("0.002")
+      );
+      console.log(temp)
 
       //TODO: render TASK Id afer fetching -> the status of the request
-      // setTaskId(temp.taskId, console.log(taskId));
-      setTaskId("0x8126409bfcae6dc2513e9fd1cfd285b8e7f509c248d0b22666c8f27b38e89922");
+      setTaskId(temp.taskId, console.log(taskId));
+      // setTaskId("0x8126409bfcae6dc2513e9fd1cfd285b8e7f509c248d0b22666c8f27b38e89922");
     } catch (error) {
       console.log(error)
     }
@@ -166,14 +182,15 @@ export default function Home() {
 
   const renderButton = () => {
     if(!loggedIn){
-      return <button onClick={login}> Login </button>
+      return <Button color="inherit" onClick={login}> Login </Button>
     }
     else{
-        return <button onClick={logout}>Log Out</button>} 
+        console.log("logged in", walletAddress);
+        return <Button color="inherit" id="account-button" onClick={handleClick} aria-controls="open ? 'account-menu' : undefined" aria-haspopup="true" aria-expanded={open ? 'true':undefined}> {walletAddress}</Button>} 
   }
 
   const renderForm = () => {
-    if(loggedIn) {
+    if(walletAddress) {
       return <>
       <form>
           {/* <label> URL </label>  */}
@@ -198,10 +215,21 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <AppBar position="static">
+      <AppBar position="sticky">
         <Toolbar variant="regular">
-            <Typography> onNFT</Typography>  
-            {renderButton()}
+          <IconButton size='large' edge='start' color='inherit' aria-label='logo'>
+            <SellIcon />
+          </IconButton> 
+          <Typography variant='h6' component='div' sx={{ flexGrow: 1 }}>
+          onNFT
+        </Typography>
+        <Stack direction='row' spacing={2}>
+          {renderButton()}
+        </Stack>
+        <Menu id="account-menu" anchorEl={anchorElement} open={open} MenuListProps ={{'aria-labelledby' : 'account-button,'}} onClose ={handleClose} >
+          <MenuItem onClick={logout}> Log Out </MenuItem>
+          <MenuItem onClick={handleClose}> Check Balance </MenuItem>
+        </Menu>  
         </Toolbar>
       </AppBar>
       <main className={styles.main}> 
