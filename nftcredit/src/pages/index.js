@@ -11,9 +11,13 @@ import {
   Stack,
   Alert,
   Menu,
-  MenuItem
+  MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from '@mui/material'
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import SellIcon from '@mui/icons-material/Sell';
 
 import { SafeOnRampKit, SafeOnRampProviderType } from '@safe-global/onramp-kit'
@@ -40,6 +44,7 @@ export default function Home() {
   const [taskId, setTaskId] = useState("");
   const [taskStatus, setTaskStatus] = useState("");
   const [anchorElement, setAnchorElement] = useState(null);
+  const [balanceDialog, setBalanceDialog] = useState(false);
 
   const open = Boolean(anchorElement)
   const handleClick = (e) => {
@@ -206,6 +211,9 @@ export default function Home() {
     }
   }
 
+  const handleBalance = () => {
+    
+  }
 
   return (
     <>
@@ -228,8 +236,25 @@ export default function Home() {
         </Stack>
         <Menu id="account-menu" anchorEl={anchorElement} open={open} MenuListProps ={{'aria-labelledby' : 'account-button,'}} onClose ={handleClose} >
           <MenuItem onClick={logout}> Log Out </MenuItem>
-          <MenuItem onClick={handleClose}> Check Balance </MenuItem>
-        </Menu>  
+          <MenuItem onClick={() => setBalanceDialog(true)}> Check Balance </MenuItem>
+        </Menu>
+        <Dialog open= {balanceDialog} onClose = {() => setBalanceDialog(false)}aria-labelledby='dialog-title' aria-describedby='dialog-desc'>
+      <DialogTitle id='dialog-title'> Current Balance </DialogTitle>
+      <DialogContent>
+        <DialogContentText id='dialog-desc'> {tokens.map(token => (
+          <div key={token.contract_name}>
+            <img src={token.logo_url} alt="token" />
+            <p>{token.balance / (10 ** token.contract_decimals)} {token.contract_ticker_symbol}</p>
+          </div>
+        ))} </DialogContentText>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={() => {
+          setBalanceDialog(false), logout
+        }}> LogOut</Button>
+        <Button onClick={() => setBalanceDialog(false)}> Close </Button>
+      </DialogActions>
+    </Dialog>  
         </Toolbar>
       </AppBar>
       <main className={styles.main}> 
@@ -237,12 +262,7 @@ export default function Home() {
         <div id='stripe-root'></div>
         {walletAddress && <p>{walletAddress}</p>}
         <h2> Your Current Balance </h2>
-        {tokens.map(token => (
-          <div key={token.contract_name}>
-            <img src={token.logo_url} alt="token" />
-            <p>{token.balance / (10 ** token.contract_decimals)} {token.contract_ticker_symbol}</p>
-          </div>
-        ))}
+        
 
         {renderForm()}
 
