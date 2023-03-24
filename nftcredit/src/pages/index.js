@@ -2,9 +2,11 @@ import Head from 'next/head'
 import Script from 'next/script'
 import {ethers} from 'ethers'
 import { Contract, providers, utils } from "ethers";
+import Backdrop from '@mui/material/Backdrop';
+import CircularProgress from '@mui/material/CircularProgress';
 import {
   AppBar,
-  Toolbar,
+Toolbar,
   IconButton,
   Typography,
   Button,
@@ -37,9 +39,9 @@ export default function Home() {
   const [walletAddress, setWalletAddress] = useState();
   const [tokens, setTokens] = useState([]);
   const [loggedIn, setloggedIn] = useState(false);
-  const [url, setURL] = useState("");
   const [gobMethod, setGOBMethod] = useState(null);
   const [gw, setGW] = useState();
+  const [loading, setLoading] = useState(false);
   const [toAddress, setToAddress] = useState("");
   const [taskId, setTaskId] = useState("");
   const [taskStatus, setTaskStatus] = useState("");
@@ -54,6 +56,7 @@ export default function Home() {
   const handleClose = () => {
     setAnchorElement(null);
   }
+
   const initOnramp = async () => {
     const safeOnRamp = await SafeOnRampKit.init(SafeOnRampProviderType.Stripe, {
       onRampProviderConfig: {
@@ -82,6 +85,7 @@ export default function Home() {
 
   const login = async() => {
     try{
+      setLoading(true);
       const gaslessWalletConfig = { apiKey: process.env.NEXT_PUBLIC_GASLESSWALLET_KEY};
       const loginConfig = {
         domains: ["http://localhost:3000/"],
@@ -101,6 +105,7 @@ export default function Home() {
       await gaslessOnboarding.init();
       const web3AuthProvider = await gaslessOnboarding.login();
       setloggedIn(true);
+      setLoading(false);
       console.log("Web3 Auth Provider", web3AuthProvider);
       setGOBMethod(gaslessOnboarding);
 
@@ -122,6 +127,7 @@ export default function Home() {
 
   const renderAlert = (taskStatus) => {
     console.log("TaskStatus is", taskStatus);
+    console.log("here in renderAlert")
     switch(taskStatus){
       case 'CheckPending':
         return <Alert severity='info'> The Request is being processed (check pending)</Alert>
@@ -139,12 +145,6 @@ export default function Home() {
 
     }
   }
-
-  useEffect(() => {
-    console.log(taskStatus);
-    renderAlert(taskStatus);
-  }, [taskStatus]);
-
   useEffect(() => {
     if(taskId){
     console.log("Task Id is", taskId);
@@ -154,35 +154,57 @@ export default function Home() {
     }
   }, [taskId])
 
+  // var possTaskStatus= ["CheckPending", "ExecPeding", "WaitingForConfirmation", "ExecSuccess", "Cancelled","ExecReverted"];
+  // useEffect(() => {
+  //   setInterval(() => 
+  //   {
+  //       setTaskStatus("CheckPending");
+  //   }, 1000);
+  // }, []);
+
+  useEffect(() => {
+    console.log('Task status was changed', taskStatus);
+    renderAlert(taskStatus);
+  }, [taskStatus]);
+
+  
+
   const mintNFT = async() => {
     try{
-      const relay = new GelatoRelay();
-      let iface = new ethers.utils.Interface(CONTRACT_ABI);
-      let tokenURI = "ipfs://bafyreidrt5utdvnwonctnojcese7n2lzi4pkcvvtz7mw2ptijbtnb5sfya/metadata.json"
-      let recipient = toAddress;
-      console.log(recipient, tokenURI);
+      // setLoading(true);
+      // const relay = new GelatoRelay();
+      // let iface = new ethers.utils.Interface(CONTRACT_ABI);
+      // let tokenURI = "ipfs://bafyreidrt5utdvnwonctnojcese7n2lzi4pkcvvtz7mw2ptijbtnb5sfya/metadata.json"
+      // let recipient = toAddress;
+      // console.log(recipient, tokenURI);
       
-      let tx = iface.encodeFunctionData("mintNFT", [ recipient, tokenURI ])
-      
-      console.log(tx)
-      console.log(gw);
-      const temp = await gw.sponsorTransaction(
-        CONTRACT_ADDRESS,
-        tx,
-        ethers.utils.parseEther("0.002")
-      );
-      console.log(temp)
+      // let tx = iface.encodeFunctionData("mintNFT", [ recipient, tokenURI ])
+      // console.log(tx)
+      // console.log(gw);
+      // const temp = await gw.sponsorTransaction(
+      //   CONTRACT_ADDRESS,
+      //   tx,
+      //   ethers.utils.parseEther("0.002")
+      // );
+      // console.log(temp)
 
-      //TODO: render TASK Id afer fetching -> the status of the request
-      setTaskId(temp.taskId, console.log(taskId));
-      // setTaskId("0x8126409bfcae6dc2513e9fd1cfd285b8e7f509c248d0b22666c8f27b38e89922");
+      // //TODO: render TASK Id afer fetching -> the status of the request
+      // setTaskId(temp.taskId, console.log(taskId));
+      // setLoading(false);
+      setTaskId("0x8126409bfcae6dc2513e9fd1cfd285b8e7f509c248d0b22666c8f27b38e89922");
+      return <> Task Id : {taskId}</>
+      
     } catch (error) {
       console.log(error)
     }
   }
   
   const logout = async() =>{
+    setLoading(true);
     await gobMethod.logout();
+    setloggedIn(false);
+    setWalletAddress();
+    setLoading(false);
   }
 
   const renderButton = () => {
@@ -210,9 +232,10 @@ export default function Home() {
               sx={{ mt: 3, mb: 2 }} onClick={mintNFT}> Mint NFT</Button></>
     }
   }
-
-  const handleBalance = () => {
-    
+  const renderTask = () => {
+    if(loggedIn && taskId){
+      return <> Task Id: {taskId}</>
+    }
   }
 
   return (
@@ -260,14 +283,15 @@ export default function Home() {
       <main className={styles.main}> 
         <h1> NFT Credit using Gasless Wallet</h1>
         <div id='stripe-root'></div>
-        {walletAddress && <p>{walletAddress}</p>}
-        <h2> Your Current Balance </h2>
-        
+        {walletAddress && <p>{walletAddress}</p>}        
 
         {renderForm()}
-
-        
-        <p> Task Id {taskId}</p>
+        {renderTask()}
+       
+        <Backdrop
+        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        open={loading}>
+        <CircularProgress color="inherit" /></Backdrop>
       </main>
     
     </>
