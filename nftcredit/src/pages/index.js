@@ -129,32 +129,54 @@ export default function Home() {
     }
   }
 
-  const renderAlert = (taskStatus) => {
+  const renderAlert = () => {
     console.log("TaskStatus is", taskStatus);
-    console.log("here in renderAlert")
+    // console.log("here in renderAlert")
     switch(taskStatus){
+      case 'Initialised':
+        return <Alert severity='info'> Request created</Alert>
       case 'CheckPending':
         return <Alert severity='info'> The Request is being processed (check pending)</Alert>
       case 'ExecPending':
         return <Alert severity='info'> The Request is being processed (execution pending) </Alert>
       case 'WaitingForConfirmation':
-        return <Alert severity='info'> The Request is being processed (confirmation waiting)</Alert>
+        return <Alert severity='info'> The Request is being processed (waiting for confirmation)</Alert>
       case 'ExecSuccess':
         return <Alert severity='success'> The Request was successful </Alert>
       case 'Cancelled':
-        console.log("Cancelled switch")
         return <Alert severity='error'> The Request was Cancelled </Alert>
       case 'ExecReverted':
         return <Alert severity='warning'> The request was Reverted </Alert>
+      // default: return <Alert severity='info'> WAITTTTT</Alert>
 
     }
   }
   useEffect(() => {
+
     if(taskId){
-    console.log("Task Id is", taskId);
-    fetch(`https://relay.gelato.digital/tasks/status/${taskId}`)
-    .then(response => response.json())
-    .then(task => setTaskStatus(task.task.taskState));
+
+       let call = setInterval(() => 
+    {
+        console.log("Task Id is", taskId);
+        try{
+          fetch(`https://relay.gelato.digital/tasks/status/${taskId}`)
+        .then(response => response.json())
+        .then(task => {
+          
+          if(task.task != undefined){
+            setTaskStatus(task.task.taskState)
+            console.log("Task status inside interval is", task.task.taskStatus);
+            console.log("State access inside useeffect", taskStatus)
+            if(task.task.taskState == 'Cancelled' || task.task.taskState == 'ExecSuccess')clearInterval(call)
+          }
+        });
+        }
+        catch(err){
+          
+          setTaskStatus('Initialised')
+        }
+        
+    }, 1500);
     }
   }, [taskId])
 
@@ -168,7 +190,7 @@ export default function Home() {
 
   useEffect(() => {
     console.log('Task status was changed', taskStatus);
-    renderAlert(taskStatus);
+    renderAlert();
   }, [taskStatus]);
 
   
@@ -292,6 +314,7 @@ export default function Home() {
 
         {renderForm()}
         {renderTask()}
+        {renderAlert()}
        
         <Backdrop
         sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
