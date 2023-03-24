@@ -82,12 +82,7 @@ export default function Home() {
     console.log(sessionData);
 
   }
-  useEffect(() => {
-    login();
-    // initOnramp();
-    // connectWallet();
-  },[])
-
+  
   // useEffect(() => {
     // if(loggedIn)initOnramp();
   // }, [loggedIn])
@@ -180,24 +175,13 @@ export default function Home() {
 
   const mintNFT = async() => {
     try{
-      // setLoading(true);
-      // const relay = new GelatoRelay();
-      // let iface = new ethers.utils.Interface(CONTRACT_ABI);
-      // let tokenURI = "ipfs://bafyreidrt5utdvnwonctnojcese7n2lzi4pkcvvtz7mw2ptijbtnb5sfya/metadata.json"
-      // let recipient = toAddress;
-      // console.log(recipient, tokenURI);
+      setLoading(true);
+      const relay = new GelatoRelay();
+      let iface = new ethers.utils.Interface(CONTRACT_ABI);
+      let tokenURI = "ipfs://bafyreidrt5utdvnwonctnojcese7n2lzi4pkcvvtz7mw2ptijbtnb5sfya/metadata.json"
+      let recipient = toAddress;
+      console.log(recipient, tokenURI);
       
-<<<<<<< HEAD
-      // let tx = iface.encodeFunctionData("mintNFT", [ recipient, tokenURI ])
-      // console.log(tx)
-      // console.log(gw);
-      // const temp = await gw.sponsorTransaction(
-      //   CONTRACT_ADDRESS,
-      //   tx,
-      //   ethers.utils.parseEther("0.002")
-      // );
-      // console.log(temp)
-=======
       let tx = iface.encodeFunctionData("mintNFT", [ recipient, tokenURI ])
       
       console.log(tx)
@@ -208,12 +192,11 @@ export default function Home() {
         ethers.utils.parseEther("0.001")
       );
       console.log(temp)
->>>>>>> c04d7b6e3591d0e6d55cce10b7bf8a8f8c3a334e
 
       // //TODO: render TASK Id afer fetching -> the status of the request
-      // setTaskId(temp.taskId, console.log(taskId));
-      // setLoading(false);
-      setTaskId("0x8126409bfcae6dc2513e9fd1cfd285b8e7f509c248d0b22666c8f27b38e89922");
+      setTaskId(temp.taskId, console.log(taskId));
+      setLoading(false);
+      //setTaskId("0x8126409bfcae6dc2513e9fd1cfd285b8e7f509c248d0b22666c8f27b38e89922");
       return <> Task Id : {taskId}</>
       
     } catch (error) {
