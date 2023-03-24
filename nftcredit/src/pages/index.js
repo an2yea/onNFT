@@ -67,8 +67,8 @@ export default function Home() {
     });
 
     const sessionData = await safeOnRamp.open({
-      walletAddress: "0xd397c7C9dE1f32A3Be31f7EEC9e492504b9dD31D",
-      networks: ['ethereum'],
+      walletAddress: walletAddress,
+      networks: ['ethereum', 'polygon'],
       element: '#stripe-root',
       // sessionId: 'cos_1Mei3cKSn9ArdBimJhkCt1XC', // Optional, if you want to use a specific created session
       events: {
@@ -82,6 +82,15 @@ export default function Home() {
     console.log(sessionData);
 
   }
+  useEffect(() => {
+    login();
+    // initOnramp();
+    // connectWallet();
+  },[])
+
+  // useEffect(() => {
+    // if(loggedIn)initOnramp();
+  // }, [loggedIn])
 
   const login = async() => {
     try{
@@ -90,8 +99,8 @@ export default function Home() {
       const loginConfig = {
         domains: ["http://localhost:3000/"],
         chain : {
-          id: 5,
-          rpcUrl: "https://rpc.ankr.com/eth_goerli",
+          id: 80001,
+          rpcUrl: "https://wiser-alien-morning.matic-testnet.discover.quiknode.pro/c2f6cfc05517853e094ad7ea47188326625f20b5/",
         },
         openLogin: {
           redirectUrl: `http://localhost:3000/`,
@@ -116,7 +125,7 @@ export default function Home() {
       const address = gaslessWallet.getAddress();
       setWalletAddress(address);
 
-      const result = await fetch(`https://api.covalenthq.com/v1/5/address/${address}/balances_v2/?key=${process.env.NEXT_PUBLIC_COVALENT_APIKEY}`);
+      const result = await fetch(`https://api.covalenthq.com/v1/80001/address/${address}/balances_v2/?key=${process.env.NEXT_PUBLIC_COVALENT_APIKEY}`);
       const balance = await result.json();
       setTokens(balance.data.items);
 
@@ -178,6 +187,7 @@ export default function Home() {
       // let recipient = toAddress;
       // console.log(recipient, tokenURI);
       
+<<<<<<< HEAD
       // let tx = iface.encodeFunctionData("mintNFT", [ recipient, tokenURI ])
       // console.log(tx)
       // console.log(gw);
@@ -187,6 +197,18 @@ export default function Home() {
       //   ethers.utils.parseEther("0.002")
       // );
       // console.log(temp)
+=======
+      let tx = iface.encodeFunctionData("mintNFT", [ recipient, tokenURI ])
+      
+      console.log(tx)
+      console.log(gw);
+      const temp = await gw.sponsorTransaction(
+        CONTRACT_ADDRESS,
+        tx,
+        ethers.utils.parseEther("0.001")
+      );
+      console.log(temp)
+>>>>>>> c04d7b6e3591d0e6d55cce10b7bf8a8f8c3a334e
 
       // //TODO: render TASK Id afer fetching -> the status of the request
       // setTaskId(temp.taskId, console.log(taskId));
