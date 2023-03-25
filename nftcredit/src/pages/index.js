@@ -45,6 +45,7 @@ export default function Home() {
   const [taskId, setTaskId] = useState("");
   const [taskStatus, setTaskStatus] = useState("");
   const [anchorElement, setAnchorElement] = useState(null);
+  const [web3AuthProvider, setWeb3AuthProvider] = useState(null)
   const [balanceDialog, setBalanceDialog] = useState(false);
  
 
@@ -68,7 +69,9 @@ export default function Home() {
           'pk_test_51MZbmZKSn9ArdBimSyl5i8DqfcnlhyhJHD8bF2wKrGkpvNWyPvBAYtE211oHda0X3Ea1n4e9J9nh2JkpC7Sxm5a200Ug9ijfoO', // Safe public key
         onRampBackendUrl: 'https://aa-stripe.safe.global', // Safe deployed server
       },
-    });
+    }
+      
+    );
 
     const sessionData = await safeOnRamp.open({
       walletAddress: walletAddress,
@@ -84,12 +87,25 @@ export default function Home() {
     })
 
     console.log(sessionData);
+// --------------
+      // const provider = new ethers.providers.Web3Provider(web3AuthProvider);
+      // const signer = await provider.getSigner();
+      // const nftContract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
+      // let bal = await nftContract.balanceOf(walletAddress);
+      // console.log('Balance is', bal.toNumber());
+      // ----------------
 
   }
   
   useEffect(()=>{
     login();
   }, [])
+  // useEffect(()=>{
+  //   if(walletAddress)initOnramp();
+  //   console.log("eth object", window.ethereum)
+  // }, [walletAddress])
+
   const login = async() => {
     
     try{
@@ -111,9 +127,10 @@ export default function Home() {
       );
       
       await gaslessOnboarding.init();
-      const web3AuthProvider = await gaslessOnboarding.login();
+      const web3AP = await gaslessOnboarding.login();
+      setWeb3AuthProvider(web3AP);
       setLoading(false);
-      console.log("Web3 Auth Provider", web3AuthProvider);
+      console.log("Web3 Auth Provider", web3AP);
       setGOBMethod(gaslessOnboarding);
 
       const gaslessWallet = gaslessOnboarding.getGaslessWallet();
@@ -154,6 +171,7 @@ export default function Home() {
 
     }
   }
+  
   useEffect(() => {
 
     if(taskId){
@@ -408,6 +426,9 @@ export default function Home() {
   //   }
   //   return web3Provider;
   // };
+
+
+
 
   // // useEffect(() => {
   // //   // if wallet is not connected, create a new instance of Web3Modal and connect the MetaMask wallet
