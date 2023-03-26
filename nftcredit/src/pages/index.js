@@ -87,20 +87,36 @@ export default function Home() {
     })
 
     console.log(sessionData);
-// --------------
-      // const provider = new ethers.providers.Web3Provider(web3AuthProvider);
-      // const signer = await provider.getSigner();
-      // const nftContract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+  }
 
-      // let bal = await nftContract.balanceOf(walletAddress);
-      // console.log('Balance is', bal.toNumber());
-      // ----------------
+    const fetchUsers = async() => {
+      if(web3AuthProvider){
+        const tokenIds = [];
+        const provider = new ethers.providers.Web3Provider(web3AuthProvider);
+        const signer = await provider.getSigner();
+        const nftContract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
+        let bal = await nftContract.balanceOf(walletAddress);
+        console.log('Balance is', bal.toNumber());
+
+        for(var i=0; i<bal;++i){
+          const tokenId = await nftContract.totalSupply();
+          tokenIds.push(tokenId);
+        }
+        console.log(tokenIds);
+
+      }
 
   }
   
   useEffect(()=>{
     login();
   }, [])
+
+  useEffect(() =>{
+    console.log("Web3auth changed")
+    fetchUsers();
+  }, [web3AuthProvider])
   // useEffect(()=>{
   //   if(walletAddress)initOnramp();
   //   console.log("eth object", window.ethereum)
