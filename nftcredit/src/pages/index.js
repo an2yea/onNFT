@@ -4,6 +4,7 @@ import {ethers} from 'ethers'
 import { Contract, providers, utils } from "ethers";
 import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
+import Logo from "../../public/favicon.png"
 import {
   AppBar,
 Toolbar,
@@ -89,25 +90,24 @@ export default function Home() {
     console.log(sessionData);
   }
 
-    const fetchUsers = async() => {
-      if(web3AuthProvider){
-        const tokenIds = [];
-        const provider = new ethers.providers.Web3Provider(web3AuthProvider);
-        const signer = await provider.getSigner();
-        const nftContract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+    // const fetchUsers = async() => {
+    //   if(web3AuthProvider){
+    //     const tokenIds = [];
+    //     const provider = new ethers.providers.Web3Provider(web3AuthProvider);
+    //     const signer = await provider.getSigner();
+    //     const nftContract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
 
-        let bal = await nftContract.balanceOf(walletAddress);
-        console.log('Balance is', bal.toNumber());
+    //     let bal = await nftContract.balanceOf(walletAddress);
+    //     console.log('Balance is', bal.toNumber());
 
-        for(var i=0; i<bal;++i){
-          const tokenId = await nftContract.totalSupply();
-          tokenIds.push(tokenId);
-        }
-        console.log(tokenIds);
+    //     for(var i=0; i<bal;++i){
+    //       const tokenId = await nftContract.totalSupply();
+    //       tokenIds.push(tokenId);
+    //     }
+    //     console.log(tokenIds);
 
-      }
+    //   }
 
-  }
   
   useEffect(()=>{
     login();
@@ -115,12 +115,8 @@ export default function Home() {
 
   useEffect(() =>{
     console.log("Web3auth changed")
-    fetchUsers();
+    // fetchUsers();
   }, [web3AuthProvider])
-  // useEffect(()=>{
-  //   if(walletAddress)initOnramp();
-  //   console.log("eth object", window.ethereum)
-  // }, [walletAddress])
 
   const login = async() => {
     
@@ -272,11 +268,11 @@ export default function Home() {
 
   const renderButton = () => {
     if(!walletAddress){
-      return <Button color="inherit" onClick={login}> Login </Button>
+      return <Button style={{backgroundColor:"#5D5DFF", color:"white"}}variant="contained" color="inherit" size="medium" onClick={login}> Login </Button>
     }
     else{
         console.log("logged in", walletAddress);
-        return <Button color="inherit" id="account-button" onClick={handleClick} aria-controls="open ? 'account-menu' : undefined" aria-haspopup="true" aria-expanded={open ? 'true':undefined}> {walletAddress}</Button>} 
+        return <Button style={{backgroundColor:"#5D5DFF", color:"white"}} variant="contained" color="inherit" id="account-button" size="medium" onClick={handleClick} aria-controls="open ? 'account-menu' : undefined" aria-haspopup="true" aria-expanded={open ? 'true':undefined}> {walletAddress}</Button>} 
   }
 
   const renderForm = () => {
@@ -309,11 +305,9 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <AppBar position="sticky">
-        <Toolbar variant="regular">
-          <IconButton size='large' edge='start' color='inherit' aria-label='logo'>
-            <SellIcon />
-          </IconButton> 
+      <AppBar position="sticky" style={{backgroundColor:"transparent"}}>
+        <Toolbar variant="regular" >
+          <img src={Logo} />
           <Typography variant='h6' component='div' sx={{ flexGrow: 1 }}>
           onNFT
         </Typography>
