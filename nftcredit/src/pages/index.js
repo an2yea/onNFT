@@ -321,7 +321,7 @@ export default function Home() {
       <Box sx={{mt:3, flexDirection: 'row', justifyContent:'center', alignItems:'center'}}>
       <AppBar  position="sticky" style={{backgroundColor:"transparent"}}>
         <Toolbar sx={{ml:'2%'}}variant="regular" >
-          <img src='images/logo4.svg' height='70px' width='50px'/>
+          <img src='images/logo5.svg' height='70px' width='50px'/>
           <Typography variant='h6' component='div' sx={{ flexGrow: 1 }}>
             &nbsp; onNFT
         </Typography>
