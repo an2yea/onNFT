@@ -4,7 +4,6 @@ import {ethers} from 'ethers'
 import { Contract, providers, utils } from "ethers";
 import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
-import Logo from "../pages/logo1.png"
 import { createTheme, ThemeProvider } from '@mui/system';
 
 const theme = createTheme({
@@ -255,29 +254,27 @@ export default function Home() {
   const mintNFT = async() => {
     try{
       console.log("in mint")
-      // setLoading(true);
-      // const relay = new GelatoRelay();
-      // let iface = new ethers.utils.Interface(CONTRACT_ABI);
-      // let tokenURI = "ipfs://bafyreidrt5utdvnwonctnojcese7n2lzi4pkcvvtz7mw2ptijbtnb5sfya/metadata.json"
-      // let recipient = toAddress;
-      // console.log(recipient, tokenURI);
+      setLoading(true);
+      const relay = new GelatoRelay();
+      let iface = new ethers.utils.Interface(CONTRACT_ABI);
+      let tokenURI = "ipfs://bafyreidrt5utdvnwonctnojcese7n2lzi4pkcvvtz7mw2ptijbtnb5sfya/metadata.json"
+      let recipient = toAddress;
+      console.log(recipient, tokenURI);
       
-      // let tx = iface.encodeFunctionData("mintNFT", [ recipient, tokenURI ])
+      let tx = iface.encodeFunctionData("mintNFT", [ recipient, tokenURI ])
       
-      // console.log(tx)
-      // console.log(gw);
-      // const temp = await gw.sponsorTransaction(
-      //   CONTRACT_ADDRESS,
-      //   tx,
-      //   ethers.utils.parseEther("0.001")
-      // );
-      // console.log(temp)
+      console.log(tx)
+      console.log(gw);
+      const temp = await gw.sponsorTransaction(
+        CONTRACT_ADDRESS,
+        tx,
+        ethers.utils.parseEther("0.001")
+      );
 
-      // // //TODO: render TASK Id afer fetching -> the status of the request
-      // setTaskId(temp.taskId, console.log(taskId));
-      // setLoading(false);
-      // //setTaskId("0x8126409bfcae6dc2513e9fd1cfd285b8e7f509c248d0b22666c8f27b38e89922");
-      // return <> Task Id : {taskId}</>
+      setTaskId(temp.taskId, console.log(taskId));
+      setLoading(false);
+      //setTaskId("0x8126409bfcae6dc2513e9fd1cfd285b8e7f509c248d0b22666c8f27b38e89922");
+      return <> Task Id : {taskId}</>
       
     } catch (error) {
       console.log(error)
@@ -321,12 +318,12 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <Box sx={{flexDirection: 'row', justifyContent:'center', alignItems:'center'}}>
-      <AppBar position="sticky" style={{backgroundColor:"transparent"}}>
-        <Toolbar variant="regular" >
-          <img src={Logo} />
+      <Box sx={{mt:3, flexDirection: 'row', justifyContent:'center', alignItems:'center'}}>
+      <AppBar  position="sticky" style={{backgroundColor:"transparent"}}>
+        <Toolbar sx={{ml:'2%'}}variant="regular" >
+          <img src='images/logo4.svg' height='70px' width='50px'/>
           <Typography variant='h6' component='div' sx={{ flexGrow: 1 }}>
-          onNFT
+            &nbsp; onNFT
         </Typography>
         <Stack direction='row' spacing={2}>
           {renderButton()}
@@ -355,6 +352,7 @@ export default function Home() {
         </Toolbar>
       </AppBar>
       <Card sx={{maxWidth:600,maxHeight:600, mt:2, mb:4, flexDirection:'col', marginLeft:'30%', width:'auto'}} position="fixed" styles={{Color:"black"}}>
+      <Stack alignItems='center'>
       <main styles={{padding:'4rem', width:'100%'}} className={styles.main} > 
         <Stack spacing={4} alignItems='center' width='100%'> 
         <h1 styles={{fontFamily:'sans-serif', justifyContent:'center'}}> NFT Credit with Gasless Wallet</h1>
@@ -366,6 +364,7 @@ export default function Home() {
         open={loading}>
         <CircularProgress color="inherit" /></Backdrop>
       </main>
+      </Stack>
     </Card>
       
     </Box>
