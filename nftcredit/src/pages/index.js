@@ -4,27 +4,8 @@ import {ethers} from 'ethers'
 import { Contract, providers, utils } from "ethers";
 import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
-import { createTheme, ThemeProvider } from '@mui/system';
+import { createTheme } from '@mui/system';
 
-const theme = createTheme({
-  typography: {
-    fontFamily: [
-      'sans-serif',
-      'inter',
-    ].join(','),
-    fontSize: {
-      xs: '0.75rem',
-      sm: '0.875rem',
-      base: '1rem',
-      lg: '1.125rem',
-      xl: '1.25rem',
-      '2xl': '1.5rem',
-      '3xl': '2rem',
-      '4xl': '2.5rem',
-      '5xl': '3.25rem',
-      '6xl': '4rem',
-    },
-  },});
 import {
   AppBar,
 Toolbar,
@@ -44,7 +25,6 @@ Box,
   Card,
   TextField,
 } from '@mui/material'
-import SellIcon from '@mui/icons-material/Sell';
 
 import { SafeOnRampKit, SafeOnRampProviderType } from '@safe-global/onramp-kit'
 
@@ -112,24 +92,52 @@ export default function Home() {
 
     console.log(sessionData);
   }
+  // function copyTextToClipboard(text) {
+  //   if (!navigator.clipboard) {
+  //     fallbackCopyTextToClipboard(text);
+  //     return;
+  //   }
+  //   navigator.clipboard.writeText(text).then(function() {
+  //     console.log('Async: Copying to clipboard was successful!');
+  //   }, function(err) {
+  //     console.error('Async: Could not copy text: ', err);
+  //   });
+  // }
+  const copyTextToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      console.log('Content copied to clipboard');
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+    }
+  }
+  
 
-    // const fetchUsers = async() => {
-    //   if(web3AuthProvider){
-    //     const tokenIds = [];
-    //     const provider = new ethers.providers.Web3Provider(web3AuthProvider);
-    //     const signer = await provider.getSigner();
-    //     const nftContract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+    const fetchUsers = async() => {
+      try{
+      if(web3AuthProvider != undefined){
+        const tokenIds = [];
+        const provider = new ethers.providers.Web3Provider(web3AuthProvider);
+        console.log(provider);
+        const signer = await provider.getSigner();
+        console.log(CONTRACT_ABI);
+        console.log(CONTRACT_ADDRESS)
+        console.log(signer)
+        const nftContract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
 
-    //     let bal = await nftContract.balanceOf(walletAddress);
-    //     console.log('Balance is', bal.toNumber());
+        let bal = await nftContract.balanceOf(walletAddress);
+        console.log('Balance is', bal.toNumber());
 
-    //     for(var i=0; i<bal;++i){
-    //       const tokenId = await nftContract.totalSupply();
-    //       tokenIds.push(tokenId);
-    //     }
-    //     console.log(tokenIds);
-
-    //   }
+        for(var i=0; i<bal;++i){
+          const tokenId = await nftContract.tokenOfOwnerByIndex(walletAddress, i);
+          tokenIds.push(tokenId);
+        }
+        console.log(tokenIds);
+      }
+    }catch(err){
+      console.log(err);
+    }
+    }
 
   
   useEffect(()=>{
@@ -138,7 +146,7 @@ export default function Home() {
 
   useEffect(() =>{
     console.log("Web3auth changed")
-    // fetchUsers();
+    fetchUsers();
   }, [web3AuthProvider])
 
   const login = async() => {
@@ -331,6 +339,7 @@ export default function Home() {
         <Menu id="account-menu" anchorEl={anchorElement} open={open} MenuListProps ={{'aria-labelledby' : 'account-button,'}} onClose ={handleClose} >
           <MenuItem onClick={handleClickLogout}> Log Out </MenuItem>
           <MenuItem onClick={() => setBalanceDialog(true)}> Check Balance </MenuItem>
+          <MenuItem onClick={() => navigator.clipboard.writeText(`${walletAddress}`)}> Copy wallet Address</MenuItem>
         </Menu>
         <Dialog open= {balanceDialog} onClose = {() => setBalanceDialog(false)}aria-labelledby='dialog-title' aria-describedby='dialog-desc'>
       <DialogTitle id='dialog-title'> Current Balance </DialogTitle>
