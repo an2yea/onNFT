@@ -1,4 +1,4 @@
-export const CONTRACT_ADDRESS="0x18cbf03E2Ee64506BBF92Cb2E5e472F04a7424f5";
+export const CONTRACT_ADDRESS="0x93ad98A45B14E39205cBe82BCB9E987c81131e8E";
 
 export const CONTRACT_ABI = [
   {
@@ -101,6 +101,23 @@ export const CONTRACT_ABI = [
     "type": "event"
   },
   {
+    "stateMutability": "payable",
+    "type": "fallback"
+  },
+  {
+    "inputs": [],
+    "name": "_price",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -201,7 +218,7 @@ export const CONTRACT_ABI = [
         "type": "uint256"
       }
     ],
-    "stateMutability": "nonpayable",
+    "stateMutability": "payable",
     "type": "function"
   },
   {
@@ -480,5 +497,16 @@ export const CONTRACT_ABI = [
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "withdraw",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "stateMutability": "payable",
+    "type": "receive"
   }
 ]

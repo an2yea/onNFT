@@ -116,7 +116,7 @@ export default function Home() {
     const fetchUsers = async() => {
       try{
       if(web3AuthProvider != undefined){
-        const tokenIds = [];
+        const tokens = [];
         const provider = new ethers.providers.Web3Provider(web3AuthProvider);
         console.log(provider);
         const signer = await provider.getSigner();
@@ -130,9 +130,25 @@ export default function Home() {
 
         for(var i=0; i<bal;++i){
           const tokenId = await nftContract.tokenOfOwnerByIndex(walletAddress, i);
-          tokenIds.push(tokenId);
+          const tokenURI = await nftContract.tokenURI(tokenId);
+          tokens.push({tokenId, tokenURI});
         }
-        console.log(tokenIds);
+        console.log(tokens);
+        for(var i=0;i<tokens.length;++i){
+          const token = tokens[i];
+          const metadata = await fetch(`https://ipfs.io/ipfs/bafybeifjtfohi3t6xbzdmneri462ivsjihjujgy2dmd7vw2zondaumuem4/MyExampleNFT.png`).then(response => response.json());
+          token.metadata = metadata;
+          console.log(metadata);
+        }
+        document.getElementById("history").innerHTML= tokens.map(createElement).join("")
+      }
+
+      function createElement(token){
+        return `<div>
+        <h1> ${token.metadata.name} #${token.tokenId} </h1>
+        <img src="https://bafybeid6udzx27uiog5ef7gwkyzye7qzvhbxgelamza6ruhvudymulqrf4.ipfs.dweb.link/onNFT.png" width="100" height="100">
+        <hr />
+        </div>`
       }
     }catch(err){
       console.log(err);
@@ -145,7 +161,7 @@ export default function Home() {
   }, [])
 
   useEffect(() =>{
-    console.log("Web3auth changed")
+    console.log("Web3auth changed");
     fetchUsers();
   }, [web3AuthProvider])
 
@@ -193,6 +209,7 @@ export default function Home() {
   }
 
   const renderAlert = () => {
+    if(walletAddress){
     console.log("TaskStatus is", taskStatus);
     // console.log("here in renderAlert")
     switch(taskStatus){
@@ -211,7 +228,7 @@ export default function Home() {
       case 'ExecReverted':
         return <Alert severity='warning'> The request was Reverted </Alert>
       // default: return <Alert severity='info'> WAITTTTT</Alert>
-
+    }
     }
   }
   
@@ -281,7 +298,7 @@ export default function Home() {
 
       setTaskId(temp.taskId, console.log(taskId));
       setLoading(false);
-      //setTaskId("0x8126409bfcae6dc2513e9fd1cfd285b8e7f509c248d0b22666c8f27b38e89922");
+      fetchUsers();
       return <> Task Id : {taskId}</>
       
     } catch (error) {
@@ -368,6 +385,18 @@ export default function Home() {
         {renderForm()}
         {renderAlert()}
         </Stack>
+        <Backdrop
+        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        open={loading}>
+        <CircularProgress color="inherit" /></Backdrop>
+      </main>
+      </Stack>
+    </Card>
+    <Card sx={{maxWidth:600,maxHeight:600, mt:2, mb:4, flexDirection:'col', marginLeft:'30%', width:'auto'}} position="fixed" styles={{Color:"black"}}>
+      <Stack alignItems='center'>
+      <main styles={{padding:'4rem', width:'100%'}} className={styles.main} > 
+        {/* <SimpleGrid columns={1}spacing={4} alignItems='center' width='100%' id="history"> 
+        </SimpleGrid> */}
         <Backdrop
         sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
         open={loading}>
