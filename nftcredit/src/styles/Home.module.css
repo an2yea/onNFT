@@ -1,10 +1,12 @@
+
 .main {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content:flex-start;
   align-items: center;
-  padding: 6rem;
-  min-height: 100vh;
+  padding-top: 4rem;
+  padding-bottom: 4rem;
+  height: auto;
 }
 
 .description {
@@ -188,6 +190,7 @@
 
   .card {
     padding: 1rem 2.5rem;
+    margin: 1%;
   }
 
   .card h2 {

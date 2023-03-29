@@ -4,10 +4,16 @@ import {ethers} from 'ethers'
 import { Contract, providers, utils } from "ethers";
 import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
+import { borderColor, createTheme } from '@mui/system';
+
+import { CardActionArea } from '@mui/material';
+
 import {
   AppBar,
 Toolbar,
+Box,
   IconButton,
+  Grid,
   Typography,
   Button,
   Stack,
@@ -19,8 +25,11 @@ Toolbar,
   DialogContent,
   DialogContentText,
   DialogActions,
+  Card,
+  CardContent,
+  CardMedia,
+  TextField,
 } from '@mui/material'
-import SellIcon from '@mui/icons-material/Sell';
 
 import { SafeOnRampKit, SafeOnRampProviderType } from '@safe-global/onramp-kit'
 
@@ -38,6 +47,7 @@ export default function Home() {
 
   const [walletAddress, setWalletAddress] = useState();
   const [tokens, setTokens] = useState([]);
+  const [mynfts, setMynfts] = useState([]);
   const [gobMethod, setGOBMethod] = useState(null);
   const [gw, setGW] = useState();
   const [loading, setLoading] = useState(false);
@@ -45,6 +55,7 @@ export default function Home() {
   const [taskId, setTaskId] = useState("");
   const [taskStatus, setTaskStatus] = useState("");
   const [anchorElement, setAnchorElement] = useState(null);
+  const [web3AuthProvider, setWeb3AuthProvider] = useState(null)
   const [balanceDialog, setBalanceDialog] = useState(false);
  
 
@@ -68,7 +79,9 @@ export default function Home() {
           'pk_test_51MZbmZKSn9ArdBimSyl5i8DqfcnlhyhJHD8bF2wKrGkpvNWyPvBAYtE211oHda0X3Ea1n4e9J9nh2JkpC7Sxm5a200Ug9ijfoO', // Safe public key
         onRampBackendUrl: 'https://aa-stripe.safe.global', // Safe deployed server
       },
-    });
+    }
+      
+    );
 
     const sessionData = await safeOnRamp.open({
       walletAddress: walletAddress,
@@ -84,12 +97,47 @@ export default function Home() {
     })
 
     console.log(sessionData);
-
   }
+  
+    const fetchUsers = async() => {
+      try{
+      if(web3AuthProvider != undefined){
+        const tokens = [];
+        const provider = new ethers.providers.Web3Provider(web3AuthProvider);
+        console.log(provider);
+        const signer = await provider.getSigner();
+        console.log(CONTRACT_ABI);
+        console.log(CONTRACT_ADDRESS)
+        console.log(signer)
+        const nftContract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
+        let bal = await nftContract.balanceOf(walletAddress);
+        console.log('Balance is', bal.toNumber());
+
+        for(var i=0; i<bal;++i){
+          const tokenId = await nftContract.tokenOfOwnerByIndex(walletAddress, i);
+          const tokenURI = await nftContract.tokenURI(tokenId);
+          const metadata = await fetch(`https://ipfs.io/ipfs/${tokenURI.substr(7)}`).then(response => response.json());
+          tokens.push({tokenId, tokenURI, metadata});
+        }
+        console.log("Hello ji",tokens);
+        setMynfts(tokens);
+      }
+    }catch(err){
+      console.log(err);
+    }
+    }
+
   
   useEffect(()=>{
     login();
   }, [])
+
+  useEffect(() =>{
+    console.log("Web3auth changed");
+    fetchUsers();
+  }, [web3AuthProvider])
+
   const login = async() => {
     
     try{
@@ -111,9 +159,10 @@ export default function Home() {
       );
       
       await gaslessOnboarding.init();
-      const web3AuthProvider = await gaslessOnboarding.login();
+      const web3AP = await gaslessOnboarding.login();
+      setWeb3AuthProvider(web3AP);
       setLoading(false);
-      console.log("Web3 Auth Provider", web3AuthProvider);
+      console.log("Web3 Auth Provider", web3AP);
       setGOBMethod(gaslessOnboarding);
 
       const gaslessWallet = gaslessOnboarding.getGaslessWallet();
@@ -133,6 +182,7 @@ export default function Home() {
   }
 
   const renderAlert = () => {
+    if(walletAddress){
     console.log("TaskStatus is", taskStatus);
     // console.log("here in renderAlert")
     switch(taskStatus){
@@ -150,10 +200,10 @@ export default function Home() {
         return <Alert severity='error'> The Request was Cancelled </Alert>
       case 'ExecReverted':
         return <Alert severity='warning'> The request was Reverted </Alert>
-      // default: return <Alert severity='info'> WAITTTTT</Alert>
-
+    }
     }
   }
+  
   useEffect(() => {
 
     if(taskId){
@@ -170,7 +220,10 @@ export default function Home() {
             setTaskStatus(task.task.taskState)
             console.log("Task status inside interval is", task.task.taskStatus);
             console.log("State access inside useeffect", taskStatus)
-            if(task.task.taskState == 'Cancelled' || task.task.taskState == 'ExecSuccess')clearInterval(call)
+            if(task.task.taskState == 'Cancelled' || task.task.taskState == 'ExecSuccess'){
+              clearInterval(call);
+              fetchUsers();
+            }
           }
         });
         }
@@ -183,14 +236,6 @@ export default function Home() {
     }
   }, [taskId])
 
-  // var possTaskStatus= ["CheckPending", "ExecPeding", "WaitingForConfirmation", "ExecSuccess", "Cancelled","ExecReverted"];
-  // useEffect(() => {
-  //   setInterval(() => 
-  //   {
-  //       setTaskStatus("CheckPending");
-  //   }, 1000);
-  // }, []);
-
   useEffect(() => {
     console.log('Task status was changed', taskStatus);
     renderAlert();
@@ -200,6 +245,7 @@ export default function Home() {
 
   const mintNFT = async() => {
     try{
+      console.log("in mint")
       setLoading(true);
       const relay = new GelatoRelay();
       let iface = new ethers.utils.Interface(CONTRACT_ABI);
@@ -216,12 +262,10 @@ export default function Home() {
         tx,
         ethers.utils.parseEther("0.001")
       );
-      console.log(temp)
 
-      // //TODO: render TASK Id afer fetching -> the status of the request
       setTaskId(temp.taskId, console.log(taskId));
       setLoading(false);
-      //setTaskId("0x8126409bfcae6dc2513e9fd1cfd285b8e7f509c248d0b22666c8f27b38e89922");
+
       return <> Task Id : {taskId}</>
       
     } catch (error) {
@@ -234,54 +278,43 @@ export default function Home() {
     await gobMethod.logout();
     setWalletAddress();
     setLoading(false);
+    setMynfts([]);
   }
 
   const renderButton = () => {
     if(!walletAddress){
-      return <Button color="inherit" onClick={login}> Login </Button>
+      return <Button style={{backgroundColor:"#5D5DFF", color:"white"}}variant="contained" color="inherit" size="medium" onClick={login}> Login </Button>
     }
     else{
         console.log("logged in", walletAddress);
-        return <Button color="inherit" id="account-button" onClick={handleClick} aria-controls="open ? 'account-menu' : undefined" aria-haspopup="true" aria-expanded={open ? 'true':undefined}> {walletAddress}</Button>} 
+        return <Button style={{backgroundColor:"#5D5DFF", color:"white"}} variant="contained" color="inherit" id="account-button" size="medium" onClick={handleClick} aria-controls="open ? 'account-menu' : undefined" aria-haspopup="true" aria-expanded={open ? 'true':undefined}> {walletAddress}</Button>} 
   }
 
   const renderForm = () => {
     if(walletAddress) {
-      return <>
-      <form>
-          {/* <label> URL </label>  */}
-          {/* <input value={url} onChange={(e) => setURL(e.target.value)} /> <br></br> */}
-          <label> toAddress </label>
-          <input value={toAddress} onChange={(e) => setToAddress(e.target.value)} />
-        </form>
+      return <Stack alignItems='center'>
+          <TextField required sx={{mt:2, mb:2}} width="100%" label="Address to Mint NFT" variant="outlined" name="toAddress" value={toAddress} onChange={(e) => setToAddress(e.target.value)}> </TextField>
         <Button
               type="submit"
-              fullWidth
               variant="contained"
-              sx={{ mt: 3, mb: 2 }} onClick={mintNFT}> Mint NFT</Button></>
-    }
-  }
-  const renderTask = () => {
-    if(walletAddress && taskId){
-      return <> Task Id: {taskId}</>
+              sx={{ mt: 2, mb: 2 }} style={{backgroundColor:"#5D5DFF", color:"white", width:'100%'}} onClick={mintNFT}> Mint NFT</Button></Stack>
     }
   }
 
   return (
-    <>
+    <div>
       <Head>
         <title> NFT Credit </title>
         <meta name="description" content="Generated by create next app" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <AppBar position="sticky">
-        <Toolbar variant="regular">
-          <IconButton size='large' edge='start' color='inherit' aria-label='logo'>
-            <SellIcon />
-          </IconButton> 
+      <Box sx={{mt:3, flexDirection: 'row', justifyContent:'center', alignItems:'center'}}>
+      <AppBar  position="sticky" style={{backgroundColor:"transparent"}}>
+        <Toolbar sx={{ml:'2%'}}variant="regular" >
+          <img src='images/logo5.svg' height='70px' width='50px'/>
           <Typography variant='h6' component='div' sx={{ flexGrow: 1 }}>
-          onNFT
+            &nbsp; onNFT
         </Typography>
         <Stack direction='row' spacing={2}>
           {renderButton()}
@@ -289,6 +322,7 @@ export default function Home() {
         <Menu id="account-menu" anchorEl={anchorElement} open={open} MenuListProps ={{'aria-labelledby' : 'account-button,'}} onClose ={handleClose} >
           <MenuItem onClick={handleClickLogout}> Log Out </MenuItem>
           <MenuItem onClick={() => setBalanceDialog(true)}> Check Balance </MenuItem>
+          <MenuItem onClick={() => navigator.clipboard.writeText(`${walletAddress}`)}> Copy wallet Address</MenuItem>
         </Menu>
         <Dialog open= {balanceDialog} onClose = {() => setBalanceDialog(false)}aria-labelledby='dialog-title' aria-describedby='dialog-desc'>
       <DialogTitle id='dialog-title'> Current Balance </DialogTitle>
@@ -309,136 +343,65 @@ export default function Home() {
     </Dialog>  
         </Toolbar>
       </AppBar>
-      <main className={styles.main}> 
-        <h1> NFT Credit using Gasless Wallet</h1>
-        <div id='stripe-root'></div>
-        {walletAddress && <p>{walletAddress}</p>}        
-
+      
+      <Grid container alignItems='center' spacing={4} paddingLeft='2%' paddingRight='2%' >
+        <Grid item xs={12} md={6}>
+        <Card sx={{mt:2, mb:4, flexDirection:'col'}} position="fixed" styles={{Color:"black"}}>
+        <Stack spacing={4} alignItems='center' width='100%' padding='4rem'> 
+        <h1 styles={{fontFamily:'sans-serif', justifyContent:'center'}}> NFT Credit with Gasless Wallet</h1>
         {renderForm()}
-        {renderTask()}
         {renderAlert()}
-       
+        </Stack>
         <Backdrop
         sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
         open={loading}>
         <CircularProgress color="inherit" /></Backdrop>
-      </main>
+        </ Card>
+        </Grid>
+
+        <Grid item xs={12} md={6} maxHeight="600px" alignItems='center' justifyItems='center' display={walletAddress}>
+      <Card sx={{mt:2, mb:4, flexDirection:'col', alignItems:'center', justifyItems:'center'}} position="fixed" styles={{Color:"black"}} padding='4%' paddingTop='4%' margin='4%'>
+      <Stack alignItems='center' spacing={4} padding='4%' paddingTop='4%' >
+        <h1> My NFTs</h1>
+        <h2> {mynfts.length} NFT's in your collection</h2>
+        <h3> Generate and mint your NFT to see them here</h3>
+        <Grid container spacing={6} maxHeight='600px' alignItems='center' id="history" overflow='auto' > 
+            {mynfts.map(nft => (
+              <Grid item xs={12} sm={6} padding='1%'>
+              <Card sx={{ width:'inherit' ,borderColor:'#5D5DFF', borderWidth:'2px', borderStyle:'solid' }}>
+                <CardActionArea>
+                <CardMedia
+                    component="img"
+                    height="200"
+                    image="next.svg"
+                    alt="green iguana"
+                  />
+                  <CardContent sx={{backgroundColor:'#5D5DFF', color:'white'}}>
+                    <Typography gutterBottom variant="h5" component="div">
+                      {nft.metadata.name}
+                    </Typography>
+                    <Typography variant="body2" color="text.primary">
+                      Here is your NFT on the beach!
+                    </Typography>
+                  </CardContent>
+                </CardActionArea>
+              </Card>
+              </ Grid>
+            ))}
+        </Grid>
+        <Backdrop
+        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        open={loading}>
+        <CircularProgress color="inherit" /></Backdrop>
+        </Stack>
+        </Card>
+        </Grid>
+      </Grid >
+    {/* </Card> */}
     
-    </>
+      
+    </Box>
+    </div>
   )
 }
 
-
-
-  // ----------------  GELATO relay
-
-    
-  // const mintRelay = async() => {
-  //   const relay = new GelatoRelay();  
-
-  //   let tokenURI = "ipfs://bafyreidrt5utdvnwonctnojcese7n2lzi4pkcvvtz7mw2ptijbtnb5sfya/metadata.json"
-  //   let recipient = toAddress;
-
-
-  //   // Populate a relay request
-  //     const request = {
-  //     chainId: provider.network.chainId,
-  //     target: counter,
-  //     data: data,
-  //     };
-
-  //   // Without a specific API key, the relay request will fail! 
-  //   // Go to https://relay.gelato.network to get a testnet API key with 1Balance.
-  //   // Send the relay request using Gelato Relay!
-  //   const relayResponse = await relay.sponsoredCall(request, apiKey);
-  // }
-    
-  //
-
-  // //
-  // const [walletConnected, setWalletConnected] = useState(false);
-  // const web3ModalRef = useRef();
-  // // ------------------
-
-  // const mintTest = async() =>{
-  //   try{
-  //     const signer = await getProviderOrSigner(true);
-
-  //     const nftContract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-
-  //     const tx = await nftContract.mintNFT(toAddress, "ipfs://bafyreidrt5utdvnwonctnojcese7n2lzi4pkcvvtz7mw2ptijbtnb5sfya/metadata.json");
-  //     // setLoading(true);
-  //     await tx.wait();
-  //     // setLoading(false);
-  //     window.alert("You have successfully minted a test NFT!")
-  //   }
-
-  //   catch(err){
-  //     console.log(err);
-  //   }
-  // }
-
-  // const connectWallet = async () => {
-  //   try {
-  //     // Get the provider from web3Modal, which in our case is MetaMask
-  //     // When used for the first time, it prompts the user to connect their wallet
-  //     await getProviderOrSigner();
-  //     setWalletConnected(true);
-  //   } catch (err) {
-  //     console.error(err);
-  //   }
-  // };
-
-  // const getProviderOrSigner = async (needSigner = false) => {
-  //   // Connect to Metamask
-  //   // Since we store `web3Modal` as a reference, we need to access the `current` value to get access to the underlying object
-  //   const provider = await web3ModalRef.current.connect();
-  //   const web3Provider = new providers.Web3Provider(provider);
-
-  //   // If user is not connected to the Goerli network, let them know and throw an error
-  //   const { chainId } = await web3Provider.getNetwork();
-  //   if (chainId !== 5) {
-  //     window.alert("Change the network to Goerli");
-  //     throw new Error("Change network to Goerli");
-  //   }
-
-  //   if (needSigner) {
-  //     const signer = web3Provider.getSigner();
-  //     return signer;
-  //   }
-  //   return web3Provider;
-  // };
-
-  // // useEffect(() => {
-  // //   // if wallet is not connected, create a new instance of Web3Modal and connect the MetaMask wallet
-  // //   if (!walletConnected) {
-  // //     // Assign the Web3Modal class to the reference object by setting it's `current` value
-  // //     // The `current` value is persisted throughout as long as this page is open
-  // //     web3ModalRef.current = new Web3Modal({
-  // //       network: "PolygonMumbai",
-  // //       providerOptions: {},
-  // //       disableInjectedProvider: false,
-  // //     });
-  // //     connectWallet();
-  // //   }
-  // // }, [walletConnected]);
-
-  // // -------------------
-  
-  // ---------------> Gelato Relay
-     // let val = {value: ethers.utils.parseEther("0.001")}
-      // const provider = new ethers.providers.Web3Provider(window.ethereum);
-      // const signer = provider.getSigner();
-
-      // const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-      // const { data } = await contract.populateTransaction.mintNFT(recipient, tokenURI);
-
-      // const request= {
-      //   chainId: 5,
-      //   target: toAddress,
-      //   data: tx,
-      //   user: walletAddress
-      // }
-
-      // const relayresponse = await relay.sponsoredCall(request, process.env.NEXT_PUBLIC_GASLESSWALLET_KEY)
-      // const taskId = relayresponse.taskId;
