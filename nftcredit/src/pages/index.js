@@ -4,7 +4,7 @@ import {ethers} from 'ethers'
 import { Contract, providers, utils } from "ethers";
 import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
-import { createTheme } from '@mui/system';
+import { borderColor, createTheme } from '@mui/system';
 
 import { CardActionArea } from '@mui/material';
 
@@ -13,6 +13,7 @@ import {
 Toolbar,
 Box,
   IconButton,
+  Grid,
   Typography,
   Button,
   Stack,
@@ -199,7 +200,6 @@ export default function Home() {
         return <Alert severity='error'> The Request was Cancelled </Alert>
       case 'ExecReverted':
         return <Alert severity='warning'> The request was Reverted </Alert>
-      // default: return <Alert severity='info'> WAITTTTT</Alert>
     }
     }
   }
@@ -235,14 +235,6 @@ export default function Home() {
     }, 1500);
     }
   }, [taskId])
-
-  // var possTaskStatus= ["CheckPending", "ExecPeding", "WaitingForConfirmation", "ExecSuccess", "Cancelled","ExecReverted"];
-  // useEffect(() => {
-  //   setInterval(() => 
-  //   {
-  //       setTaskStatus("CheckPending");
-  //   }, 1000);
-  // }, []);
 
   useEffect(() => {
     console.log('Task status was changed', taskStatus);
@@ -286,38 +278,8 @@ export default function Home() {
     await gobMethod.logout();
     setWalletAddress();
     setLoading(false);
+    setMynfts([]);
   }
-
-  // const createCard = (nftToken) => {
-  //   return <><h1> we are working </h1></>
-
-  // //   <Card sx={{ width:'inherit' }}>
-  // //   <CardActionArea>
-  // //   <CardMedia
-  // //       component="img"
-  // //       height="140"
-  // //       image="/images/logo5.png"
-  // //       alt="green iguana"
-  // //     />
-  // //     <CardContent>
-  // //       <Typography gutterBottom variant="h5" component="div">
-  // //         hrllo
-  // //       </Typography>
-  // //       <Typography variant="body2" color="text.secondary">
-  // //         Here is your NFT on the beach!
-  // //       </Typography>
-  // //     </CardContent>
-  // //   </CardActionArea>
-  // // </Card>
-  // }
-  // const renderHistory = () =>{
-  //   // document.getElementById('history').innerHTML = createCard(mynfts[0]);
-  //   console.log("renderinghsotry");
-  // }
-  // useEffect(() =>{
-  //   console.log("My nfts changed")
-  //   renderHistory();
-  // },[mynfts]);
 
   const renderButton = () => {
     if(!walletAddress){
@@ -331,8 +293,6 @@ export default function Home() {
   const renderForm = () => {
     if(walletAddress) {
       return <Stack alignItems='center'>
-          {/* <label> URL </label>  */}
-          {/* <input value={url} onChange={(e) => setURL(e.target.value)} /> <br></br> */}
           <TextField required sx={{mt:2, mb:2}} width="100%" label="Address to Mint NFT" variant="outlined" name="toAddress" value={toAddress} onChange={(e) => setToAddress(e.target.value)}> </TextField>
         <Button
               type="submit"
@@ -383,11 +343,12 @@ export default function Home() {
     </Dialog>  
         </Toolbar>
       </AppBar>
-      <Card sx={{maxWidth:600,maxHeight:600, mt:2, mb:4, flexDirection:'col', marginLeft:'30%', width:'auto'}} position="fixed" styles={{Color:"black"}}>
-      <Stack alignItems='center' spacing={4}>
+      
+      <Grid container alignItems='center' spacing={4} paddingLeft='2%' paddingRight='2%' >
+        <Grid item xs={12} md={6}>
+        <Card sx={{mt:2, mb:4, flexDirection:'col'}} position="fixed" styles={{Color:"black"}}>
         <Stack spacing={4} alignItems='center' width='100%' padding='4rem'> 
         <h1 styles={{fontFamily:'sans-serif', justifyContent:'center'}}> NFT Credit with Gasless Wallet</h1>
-        
         {renderForm()}
         {renderAlert()}
         </Stack>
@@ -395,41 +356,49 @@ export default function Home() {
         sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
         open={loading}>
         <CircularProgress color="inherit" /></Backdrop>
-      </Stack>
-    </Card>
-    <Card sx={{maxWidth:600, mt:2, mb:4, flexDirection:'col', marginLeft:'30%', width:'auto'}} position="fixed" styles={{Color:"black"}}>
-      <Stack alignItems='center' spacing={4} padding='4%' paddingTop='4%'>
-      
+        </ Card>
+        </Grid>
+
+        <Grid item xs={12} md={6} maxHeight="600px" alignItems='center' justifyItems='center' display={walletAddress}>
+      <Card sx={{mt:2, mb:4, flexDirection:'col', alignItems:'center', justifyItems:'center'}} position="fixed" styles={{Color:"black"}} padding='4%' paddingTop='4%' margin='4%'>
+      <Stack alignItems='center' spacing={4} padding='4%' paddingTop='4%' >
         <h1> My NFTs</h1>
-        <br />
-        <Stack spacing={6} alignItems='center' width='100%' id="history" overflow='scroll'> 
+        <h2> {mynfts.length} NFT's in your collection</h2>
+        <h3> Generate and mint your NFT to see them here</h3>
+        <Grid container spacing={6} maxHeight='600px' alignItems='center' id="history" overflow='auto' > 
             {mynfts.map(nft => (
-              <Card sx={{ width:'inherit' }}>
+              <Grid item xs={12} sm={6} padding='1%'>
+              <Card sx={{ width:'inherit' ,borderColor:'#5D5DFF', borderWidth:'2px', borderStyle:'solid' }}>
                 <CardActionArea>
                 <CardMedia
                     component="img"
-                    height="140"
+                    height="200"
                     image="next.svg"
                     alt="green iguana"
                   />
-                  <CardContent>
+                  <CardContent sx={{backgroundColor:'#5D5DFF', color:'white'}}>
                     <Typography gutterBottom variant="h5" component="div">
                       {nft.metadata.name}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="text.primary">
                       Here is your NFT on the beach!
                     </Typography>
                   </CardContent>
                 </CardActionArea>
               </Card>
+              </ Grid>
             ))}
-        </Stack>
+        </Grid>
         <Backdrop
         sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
         open={loading}>
         <CircularProgress color="inherit" /></Backdrop>
-      </Stack>
-    </Card>
+        </Stack>
+        </Card>
+        </Grid>
+      </Grid >
+    {/* </Card> */}
+    
       
     </Box>
     </div>
