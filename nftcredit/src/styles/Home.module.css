@@ -4,7 +4,8 @@
   flex-direction: column;
   justify-content:flex-start;
   align-items: center;
-  padding: 4rem;
+  padding-top: 4rem;
+  padding-bottom: 4rem;
   height: auto;
 }
 

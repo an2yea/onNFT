@@ -6,6 +6,8 @@ import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
 import { createTheme } from '@mui/system';
 
+import { CardActionArea } from '@mui/material';
+
 import {
   AppBar,
 Toolbar,
@@ -23,6 +25,8 @@ Box,
   DialogContentText,
   DialogActions,
   Card,
+  CardContent,
+  CardMedia,
   TextField,
 } from '@mui/material'
 
@@ -42,6 +46,7 @@ export default function Home() {
 
   const [walletAddress, setWalletAddress] = useState();
   const [tokens, setTokens] = useState([]);
+  const [mynfts, setMynfts] = useState([]);
   const [gobMethod, setGOBMethod] = useState(null);
   const [gw, setGW] = useState();
   const [loading, setLoading] = useState(false);
@@ -92,27 +97,7 @@ export default function Home() {
 
     console.log(sessionData);
   }
-  // function copyTextToClipboard(text) {
-  //   if (!navigator.clipboard) {
-  //     fallbackCopyTextToClipboard(text);
-  //     return;
-  //   }
-  //   navigator.clipboard.writeText(text).then(function() {
-  //     console.log('Async: Copying to clipboard was successful!');
-  //   }, function(err) {
-  //     console.error('Async: Could not copy text: ', err);
-  //   });
-  // }
-  const copyTextToClipboard = async () => {
-    try {
-      await navigator.clipboard.writeText(text);
-      console.log('Content copied to clipboard');
-    } catch (err) {
-      console.error('Failed to copy: ', err);
-    }
-  }
   
-
     const fetchUsers = async() => {
       try{
       if(web3AuthProvider != undefined){
@@ -131,24 +116,11 @@ export default function Home() {
         for(var i=0; i<bal;++i){
           const tokenId = await nftContract.tokenOfOwnerByIndex(walletAddress, i);
           const tokenURI = await nftContract.tokenURI(tokenId);
-          tokens.push({tokenId, tokenURI});
+          const metadata = await fetch(`https://ipfs.io/ipfs/${tokenURI.substr(7)}`).then(response => response.json());
+          tokens.push({tokenId, tokenURI, metadata});
         }
-        console.log(tokens);
-        for(var i=0;i<tokens.length;++i){
-          const token = tokens[i];
-          const metadata = await fetch(`https://ipfs.io/ipfs/bafybeifjtfohi3t6xbzdmneri462ivsjihjujgy2dmd7vw2zondaumuem4/MyExampleNFT.png`).then(response => response.json());
-          token.metadata = metadata;
-          console.log(metadata);
-        }
-        document.getElementById("history").innerHTML= tokens.map(createElement).join("")
-      }
-
-      function createElement(token){
-        return `<div>
-        <h1> ${token.metadata.name} #${token.tokenId} </h1>
-        <img src="https://bafybeid6udzx27uiog5ef7gwkyzye7qzvhbxgelamza6ruhvudymulqrf4.ipfs.dweb.link/onNFT.png" width="100" height="100">
-        <hr />
-        </div>`
+        console.log("Hello ji",tokens);
+        setMynfts(tokens);
       }
     }catch(err){
       console.log(err);
@@ -248,7 +220,10 @@ export default function Home() {
             setTaskStatus(task.task.taskState)
             console.log("Task status inside interval is", task.task.taskStatus);
             console.log("State access inside useeffect", taskStatus)
-            if(task.task.taskState == 'Cancelled' || task.task.taskState == 'ExecSuccess')clearInterval(call)
+            if(task.task.taskState == 'Cancelled' || task.task.taskState == 'ExecSuccess'){
+              clearInterval(call);
+              fetchUsers();
+            }
           }
         });
         }
@@ -298,7 +273,7 @@ export default function Home() {
 
       setTaskId(temp.taskId, console.log(taskId));
       setLoading(false);
-      fetchUsers();
+
       return <> Task Id : {taskId}</>
       
     } catch (error) {
@@ -313,6 +288,37 @@ export default function Home() {
     setLoading(false);
   }
 
+  // const createCard = (nftToken) => {
+  //   return <><h1> we are working </h1></>
+
+  // //   <Card sx={{ width:'inherit' }}>
+  // //   <CardActionArea>
+  // //   <CardMedia
+  // //       component="img"
+  // //       height="140"
+  // //       image="/images/logo5.png"
+  // //       alt="green iguana"
+  // //     />
+  // //     <CardContent>
+  // //       <Typography gutterBottom variant="h5" component="div">
+  // //         hrllo
+  // //       </Typography>
+  // //       <Typography variant="body2" color="text.secondary">
+  // //         Here is your NFT on the beach!
+  // //       </Typography>
+  // //     </CardContent>
+  // //   </CardActionArea>
+  // // </Card>
+  // }
+  // const renderHistory = () =>{
+  //   // document.getElementById('history').innerHTML = createCard(mynfts[0]);
+  //   console.log("renderinghsotry");
+  // }
+  // useEffect(() =>{
+  //   console.log("My nfts changed")
+  //   renderHistory();
+  // },[mynfts]);
+
   const renderButton = () => {
     if(!walletAddress){
       return <Button style={{backgroundColor:"#5D5DFF", color:"white"}}variant="contained" color="inherit" size="medium" onClick={login}> Login </Button>
@@ -324,14 +330,14 @@ export default function Home() {
 
   const renderForm = () => {
     if(walletAddress) {
-      return <>
+      return <Stack alignItems='center'>
           {/* <label> URL </label>  */}
           {/* <input value={url} onChange={(e) => setURL(e.target.value)} /> <br></br> */}
           <TextField required sx={{mt:2, mb:2}} width="100%" label="Address to Mint NFT" variant="outlined" name="toAddress" value={toAddress} onChange={(e) => setToAddress(e.target.value)}> </TextField>
         <Button
               type="submit"
               variant="contained"
-              sx={{ mt: 2, mb: 2 }} style={{backgroundColor:"#5D5DFF", color:"white", width:'100%'}} onClick={mintNFT}> Mint NFT</Button></>
+              sx={{ mt: 2, mb: 2 }} style={{backgroundColor:"#5D5DFF", color:"white", width:'100%'}} onClick={mintNFT}> Mint NFT</Button></Stack>
     }
   }
 
@@ -378,10 +384,10 @@ export default function Home() {
         </Toolbar>
       </AppBar>
       <Card sx={{maxWidth:600,maxHeight:600, mt:2, mb:4, flexDirection:'col', marginLeft:'30%', width:'auto'}} position="fixed" styles={{Color:"black"}}>
-      <Stack alignItems='center'>
-      <main styles={{padding:'4rem', width:'100%'}} className={styles.main} > 
-        <Stack spacing={4} alignItems='center' width='100%'> 
+      <Stack alignItems='center' spacing={4}>
+        <Stack spacing={4} alignItems='center' width='100%' padding='4rem'> 
         <h1 styles={{fontFamily:'sans-serif', justifyContent:'center'}}> NFT Credit with Gasless Wallet</h1>
+        
         {renderForm()}
         {renderAlert()}
         </Stack>
@@ -389,19 +395,39 @@ export default function Home() {
         sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
         open={loading}>
         <CircularProgress color="inherit" /></Backdrop>
-      </main>
       </Stack>
     </Card>
-    <Card sx={{maxWidth:600,maxHeight:600, mt:2, mb:4, flexDirection:'col', marginLeft:'30%', width:'auto'}} position="fixed" styles={{Color:"black"}}>
-      <Stack alignItems='center'>
-      <main styles={{padding:'4rem', width:'100%'}} className={styles.main} > 
-        {/* <SimpleGrid columns={1}spacing={4} alignItems='center' width='100%' id="history"> 
-        </SimpleGrid> */}
+    <Card sx={{maxWidth:600, mt:2, mb:4, flexDirection:'col', marginLeft:'30%', width:'auto'}} position="fixed" styles={{Color:"black"}}>
+      <Stack alignItems='center' spacing={4} padding='4%' paddingTop='4%'>
+      
+        <h1> My NFTs</h1>
+        <br />
+        <Stack spacing={6} alignItems='center' width='100%' id="history" overflow='scroll'> 
+            {mynfts.map(nft => (
+              <Card sx={{ width:'inherit' }}>
+                <CardActionArea>
+                <CardMedia
+                    component="img"
+                    height="140"
+                    image="next.svg"
+                    alt="green iguana"
+                  />
+                  <CardContent>
+                    <Typography gutterBottom variant="h5" component="div">
+                      {nft.metadata.name}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Here is your NFT on the beach!
+                    </Typography>
+                  </CardContent>
+                </CardActionArea>
+              </Card>
+            ))}
+        </Stack>
         <Backdrop
         sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
         open={loading}>
         <CircularProgress color="inherit" /></Backdrop>
-      </main>
       </Stack>
     </Card>
       
