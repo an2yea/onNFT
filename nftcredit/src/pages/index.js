@@ -12,7 +12,6 @@ import {
   AppBar,
 Toolbar,
 Box,
-  IconButton,
   Grid,
   Typography,
   Button,
@@ -62,6 +61,7 @@ export default function Home() {
  
 
   const open = Boolean(anchorElement)
+
   const handleClick = (e) => {
     setAnchorElement(e.currentTarget);
   }
@@ -74,6 +74,54 @@ export default function Home() {
     setShowHistory(false);
     logout();
   }
+
+  useEffect(()=>{
+    login();
+  }, [])
+
+  useEffect(() =>{
+    console.log("Web3auth changed");
+    fetchUsers();
+  }, [web3AuthProvider])
+
+  useEffect(() => {
+
+    if(taskId){
+
+       let call = setInterval(() => 
+    {
+        console.log("Task Id is", taskId);
+        try{
+          fetch(`https://relay.gelato.digital/tasks/status/${taskId}`)
+        .then(response => response.json())
+        .then(task => {
+          
+          if(task.task != undefined){
+            setTaskStatus(task.task.taskState)
+            console.log("Task status inside interval is", task.task.taskStatus);
+            console.log("State access inside useeffect", taskStatus)
+            if(task.task.taskState == 'Cancelled' || task.task.taskState == 'ExecSuccess'){
+              clearInterval(call);
+              fetchUsers();
+            }
+          }
+        });
+        }
+        catch(err){
+          
+          setTaskStatus('Initialised')
+        }
+        
+    }, 1500);
+    }
+  }, [taskId])
+
+  useEffect(() => {
+    console.log('Task status was changed', taskStatus);
+    renderAlert();
+  }, [taskStatus]);
+
+  
 
   const initOnramp = async () => {
     const safeOnRamp = await SafeOnRampKit.init(SafeOnRampProviderType.Stripe, {
@@ -132,14 +180,7 @@ export default function Home() {
     }
 
   
-  useEffect(()=>{
-    login();
-  }, [])
-
-  useEffect(() =>{
-    console.log("Web3auth changed");
-    fetchUsers();
-  }, [web3AuthProvider])
+  
 
   const login = async() => {
     
@@ -207,43 +248,6 @@ export default function Home() {
     }
   }
   
-  useEffect(() => {
-
-    if(taskId){
-
-       let call = setInterval(() => 
-    {
-        console.log("Task Id is", taskId);
-        try{
-          fetch(`https://relay.gelato.digital/tasks/status/${taskId}`)
-        .then(response => response.json())
-        .then(task => {
-          
-          if(task.task != undefined){
-            setTaskStatus(task.task.taskState)
-            console.log("Task status inside interval is", task.task.taskStatus);
-            console.log("State access inside useeffect", taskStatus)
-            if(task.task.taskState == 'Cancelled' || task.task.taskState == 'ExecSuccess'){
-              clearInterval(call);
-              fetchUsers();
-            }
-          }
-        });
-        }
-        catch(err){
-          
-          setTaskStatus('Initialised')
-        }
-        
-    }, 1500);
-    }
-  }, [taskId])
-
-  useEffect(() => {
-    console.log('Task status was changed', taskStatus);
-    renderAlert();
-  }, [taskStatus]);
-
   
 
   const mintNFT = async() => {
@@ -306,7 +310,7 @@ export default function Home() {
 
   const renderHistory = () => {
     if(!showHistory){
-      return <Slide direction="up" in={!showHistory} out={showHistory} mountOnEnter unmountOnExit><Grid item xs={12} md={6}>
+      return <Slide direction="up" in={!showHistory} mountOnEnter unmountOnExit><Grid item xs={12} md={6}>
         <Card sx={{mt:2, mb:4, flexDirection:'col'}} position="fixed" styles={{Color:"black"}}>
         <Stack spacing={4} alignItems='center' width='100%' padding='4rem'> 
         <h1 styles={{fontFamily:'sans-serif', justifyContent:'center'}}> NFT Credit with Gasless Wallet</h1>
@@ -342,11 +346,11 @@ export default function Home() {
           {renderButton()}
         </Stack>
         <Menu id="account-menu" anchorEl={anchorElement} open={open} MenuListProps ={{'aria-labelledby' : 'account-button,'}} onClose ={handleClose} >
-          <MenuItem onClick={handleClickLogout}> Log Out </MenuItem>
           <MenuItem onClick={() => setBalanceDialog(true)}> Check Balance </MenuItem>
           <MenuItem onClick={() => navigator.clipboard.writeText(`${walletAddress}`)}> Copy wallet Address</MenuItem>
           {showHistory && <MenuItem onClick={() => setShowHistory(false)}> Mint New NFT </MenuItem>}
           {!showHistory && <MenuItem onClick={() => setShowHistory(true)}> Show My NFTs</MenuItem>}
+          <MenuItem onClick={handleClickLogout}> Log Out </MenuItem>
         </Menu>
         <Dialog open= {balanceDialog} onClose = {() => setBalanceDialog(false)}aria-labelledby='dialog-title' aria-describedby='dialog-desc'>
       <DialogTitle id='dialog-title'> Current Balance </DialogTitle>
@@ -370,7 +374,7 @@ export default function Home() {
       
       <Grid container flexDirection='column' alignItems='center' spacing={4} paddingLeft='2%' paddingRight='2%' >
       {renderHistory()}
-      <Slide direction="up" in={showHistory} out={!showHistory} mountOnEnter unmountOnExit><Grid item xs={12} md={8} width="100%" maxHeight="600px" alignItems='center' justifyItems='center'>
+      {showHistory && <Slide direction="up" in={showHistory} mountOnEnter unmountOnExit><Grid item xs={12} md={8} width="100%" maxHeight="600px" alignItems='center' justifyItems='center'>
       <Card sx={{mt:2, mb:4, flexDirection:'col', alignItems:'center', justifyItems:'center'}} position="fixed" styles={{Color:"black"}} padding='4%' paddingTop='4%' margin='4%'>
       <Stack alignItems='center' spacing={4} padding='4%' >
         <h1> My NFTs</h1>
@@ -402,7 +406,7 @@ export default function Home() {
         </Grid>
         </Stack>
         </Card>
-        </Grid></Slide >
+        </Grid></Slide >}
       
       <Backdrop
         sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
