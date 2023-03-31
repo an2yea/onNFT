@@ -7,7 +7,7 @@ import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
 import { borderColor, createTheme } from '@mui/system';
 
-import { CardActionArea, FormLabel } from '@mui/material';
+import { CardActionArea, FormLabel, Tooltip } from '@mui/material';
 
 import {
   AppBar,
@@ -309,10 +309,11 @@ export default function Home() {
         return <Button variant="link" style={{backgroundColor:"white", color:"#45A29E"}}color="inherit" id="account-button" size="medium"> 
         <p onClick={handleClick} aria-controls="open ? 'account-menu' : undefined" aria-haspopup="true" aria-expanded={open ? 'true':undefined}>{walletAddress} 
         </p> &nbsp; 
+        <Tooltip title="Click to copy wallet address">
         <FileCopyIcon onClick={()=>{
           navigator.clipboard.writeText(`${walletAddress}`);
         setShowAlert(true);
-    }}/> </Button>} 
+    }}/></Tooltip> </Button>} 
   }
 
   const renderForm = () => {
