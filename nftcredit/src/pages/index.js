@@ -381,11 +381,11 @@ export default function Home() {
           <MenuItem onClick={() => {
             setAnchorElement(false);
             setBalanceDialog(true) }}> Check Balance </MenuItem>
-          <MenuItem onClick={() => {
+          {/* <MenuItem onClick={() => {
             navigator.clipboard.writeText(`${walletAddress}`);
             setShowAlert(true);
             setAnchorElement(false);
-          }}> Copy wallet Address</MenuItem>
+          }}> Copy wallet Address</MenuItem> */}
           {showHistory && <MenuItem onClick={() => {
             setAnchorElement(false);
             setShowHistory(false)}}> Mint New NFT </MenuItem>}
@@ -450,7 +450,7 @@ export default function Home() {
         </Grid></Slide >}
       
       <Backdrop
-        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        sx={{ color: '#45A29E', zIndex: (theme) => theme.zIndex.drawer + 1 }}
         open={loading}>
         <CircularProgress color="inherit" /></Backdrop>
       </Grid >
