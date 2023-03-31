@@ -196,7 +196,7 @@ export default function Home() {
       setLoading(true);
       const gaslessWalletConfig = { apiKey: process.env.NEXT_PUBLIC_GASLESSWALLET_KEY};
       const loginConfig = {
-        domains: ["http://localhost:3000/"],
+        domains: [window.location.origin],
         chain : {
           id: 80001,
           rpcUrl: "https://wiser-alien-morning.matic-testnet.discover.quiknode.pro/c2f6cfc05517853e094ad7ea47188326625f20b5/",
