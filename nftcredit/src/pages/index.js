@@ -42,6 +42,8 @@ import React, { useEffect, useRef, useState }  from 'react'
 import { GaslessOnboarding} from "@gelatonetwork/gasless-onboarding"
 import { CONTRACT_ABI, CONTRACT_ADDRESS } from '../constants/contractdata'
 import { GelatoRelay, SponsoredCallRequest } from "@gelatonetwork/relay-sdk";
+import FileCopyIcon from '@mui/icons-material/FileCopy';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 
 export default function Home() {
@@ -61,6 +63,7 @@ export default function Home() {
   const [showHistory, setShowHistory] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [showUpdate, setShowUpdate] = useState(false);
+  const isLargerThan600 = useMediaQuery('(min-width: 600px)')
   
  
   const imageUrl = "https://play-lh.googleusercontent.com/ZyWNGIfzUyoajtFcD7NhMksHEZh37f-MkHVGr5Yfefa-IX7yj9SMfI82Z7a2wpdKCA"
@@ -303,8 +306,13 @@ export default function Home() {
       return <Button style={{backgroundColor:"white", color:"#45A29E"}} variant="contained" color="inherit" size="medium" onClick={login}> Login </Button>
     }
     else{
-        console.log("logged in", walletAddress);
-        return <Button variant="link" style={{backgroundColor:"white", color:"#45A29E"}}color="inherit" id="account-button" size="medium" onClick={handleClick} aria-controls="open ? 'account-menu' : undefined" aria-haspopup="true" aria-expanded={open ? 'true':undefined}> {walletAddress}</Button>} 
+        return <Button variant="link" style={{backgroundColor:"white", color:"#45A29E"}}color="inherit" id="account-button" size="medium"> 
+        <p onClick={handleClick} aria-controls="open ? 'account-menu' : undefined" aria-haspopup="true" aria-expanded={open ? 'true':undefined}>{walletAddress} 
+        </p> &nbsp; 
+        <FileCopyIcon onClick={()=>{
+          navigator.clipboard.writeText(`${walletAddress}`);
+        setShowAlert(true);
+    }}/> </Button>} 
   }
 
   const renderForm = () => {
@@ -361,11 +369,11 @@ export default function Home() {
         {renderAlert()}
       </Snackbar>}
       <AppBar sx={{boxShadow:0}} position="sticky" style={{backgroundColor:"transparent"}}>
-        <Toolbar sx={{ml:'2%'}} variant="dense" >
+        <Toolbar sx={{ml:'2%', padding:'0', justifyContent:'space-around'}} variant="dense" >
           <Image src='/images/logo1.svg' alt='token' height='70' width='50'/>
-          <Typography variant='h6' component='div' sx={{ flexGrow: 1 }}>
-            &nbsp; onNFT
-        </Typography>
+          {isLargerThan600 && <Typography variant='h6' component='div' sx={{ flexGrow: 1 }}>
+            &nbsp; asyncNFT
+        </Typography>}
         <Stack direction='row' spacing={2}>
           {renderButton()}
         </Stack>
