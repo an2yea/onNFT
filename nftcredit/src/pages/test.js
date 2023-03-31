@@ -52,7 +52,3 @@ app.post("/create-onramp-session", async (req, res) => {
 // test();
 
 app.listen(4242, () => console.log("Node server listening on port 3000!"));
-
-
-curl -X POST https://api.stripe.com/v1/crypto/onramp_sessions \
--u sk_test_51Mo2Q2DXiInuRLjKj52d3BE07OHgjjB6PLdw9XS6GBv3CScU6J9syL1tDpu5jTvQr1MMcK8fuEE0dsq9VDWStzwc00SFLar0qw: \
