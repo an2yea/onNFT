@@ -269,8 +269,11 @@ export default function Home() {
       setLoading(true);
       const relay = new GelatoRelay();
       let iface = new ethers.utils.Interface(CONTRACT_ABI);
-      let tokenURI = "ipfs://bafyreidrt5utdvnwonctnojcese7n2lzi4pkcvvtz7mw2ptijbtnb5sfya/metadata.json"
-      let recipient = toAddress || walletAddress;
+      let tokenURI = "ipfs://bafyreidrt5utdvnwonctnojcese7n2lzi4pkcvvtz7mw2ptijbtnb5sfya/metadata.json";
+      let recipient = toAddress 
+      if(!recipient){
+        recipient = walletAddress;
+      }
       console.log(recipient, tokenURI);
       
       let tx = iface.encodeFunctionData("mintNFT", [ recipient, tokenURI ])
@@ -299,6 +302,22 @@ export default function Home() {
     setLoading(false);
     setMynfts([]);
   }
+
+  const renderButton = () => {
+    if(!walletAddress){
+      return <Button style={{backgroundColor:"white", color:"#45A29E"}} variant="contained" color="inherit" size="medium" onClick={login}> Login </Button>
+    }
+    else{
+        return <Button variant="link" style={{backgroundColor:"white", color:"#45A29E"}}color="inherit" id="account-button" size="medium"> 
+        <p onClick={handleClick} aria-controls="open ? 'account-menu' : undefined" aria-haspopup="true" aria-expanded={open ? 'true':undefined}>{walletAddress} 
+        </p> &nbsp; 
+        <Tooltip title="Click to Copy wallet address">
+        <FileCopyIcon onClick={()=>{
+          navigator.clipboard.writeText(`${walletAddress}`);
+        setShowAlert(true);
+    }}/></Tooltip> </Button>} 
+  }
+
   const renderForm = () => {
     if(walletAddress) {
       return <Stack alignItems='center' spacing={2}>
@@ -316,19 +335,68 @@ export default function Home() {
     }
   }
 
-  const renderButton = () => {
-    if(!walletAddress){
-      return <Button style={{backgroundColor:"white", color:"#45A29E"}} variant="contained" color="inherit" size="medium" onClick={login}> Login </Button>
+  const listing = [
+    {
+      name: 'Pikachu',
+      image: '/images/pikachu.jpeg',
+      price: 'Free'
+    },
+    {
+      name:'Arceus',
+      image:'/images/arceus.png',
+      price: 'Free'
+    },
+    {
+      name:'Bulbsaur',
+      image:'/images/bulbasaur.jpeg',
+      price: 'Free'
+
     }
-    else{
-        return <Button variant="link" style={{backgroundColor:"white", color:"#45A29E"}}color="inherit" id="account-button" size="medium"> 
-        <p onClick={handleClick} aria-controls="open ? 'account-menu' : undefined" aria-haspopup="true" aria-expanded={open ? 'true':undefined}>{walletAddress} 
-        </p> &nbsp; 
-        <Tooltip title="Click to Copy wallet address">
-        <FileCopyIcon onClick={()=>{
-          navigator.clipboard.writeText(`${walletAddress}`);
-        setShowAlert(true);
-    }}/></Tooltip> </Button>} 
+  ]
+
+  const renderListing = () => {
+    if(!showHistory){
+      return <Slide direction="up" in={!showHistory} mountOnEnter unmountOnExit><Grid item xs={12} md={8} width="100%" maxHeight="600px" alignItems='center' justifyItems='center'>
+      <Card sx={{mt:2, mb:4, flexDirection:'col', alignItems:'center', justifyItems:'center'}} position="fixed" styles={{Color:"black"}} padding='4%' margin='4%'>
+      <Stack alignItems='center' spacing={2} padding='4%' >
+        <h2> NFTs to Check Out! </h2>
+        <Grid container spacing={2} maxHeight='600px' alignItems='center' id="history" overflow='auto' > 
+            {listing.map(({name, image, price}) => (
+              <Grid key='1' item xs={12} sm={6} md={4} padding='0.5%'>
+              <Card sx={{ width:'inherit' ,borderColor:'rgba(253,193,104,1)', borderWidth:'2px', borderStyle:'solid' }}>
+                <CardActionArea>
+                <CardMedia
+                    component="img"
+                    height="200"
+                    image={image}
+                    alt={name}
+                  />
+                  <CardContent sx={{backgroundColor:'rgba(251,128,128,1)', color:'white'}}>
+                    <Typography gutterBottom variant="h5" component="div">
+                      {name}
+                    </Typography>
+
+                    <Typography variant="body2" color="#1f2833">
+                      {price}
+                    </Typography>
+                    <Button
+                    type="submit"
+                    variant="contained"
+                  sx={{ mt: 2, mb: 2 }} style={{backgroundColor:"#45A29E", color:"white", width:'100%'}} onClick={() =>{
+                if(toAddress=="") setToAddress(walletAddress);
+                mintNFT();
+              }}> Mint {name} </Button>
+                  </CardContent>
+                </CardActionArea>
+              </Card>
+              </ Grid>
+            ))}
+        </Grid>
+        </Stack>
+        </Card>
+        </Grid>
+        </Slide >
+    }
   }
 
   const renderHistory = () => {
@@ -356,7 +424,7 @@ export default function Home() {
         <title> asyncNFT </title>
         <meta name="description" content="Buy NFTs seamlessly with Account Abstraction" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/images/logo.svg" />
+        <link rel="icon" href="images/logo.svg" />
       </Head>
       <Box sx={{mt:3, flexDirection: 'row', justifyContent:'center', alignItems:'center'}}>
       <Snackbar anchorOrigin={{vertical: 'top', horizontal:'center'}} open={showAlert} autoHideDuration={3000} onClose={handleClose}>
@@ -415,6 +483,7 @@ export default function Home() {
       
       <Grid container flexDirection='column' alignItems='center' spacing={4} paddingLeft='2%' paddingRight='2%' >
       {renderHistory()}
+      {renderListing()}
       {showHistory && <Slide direction="up" in={showHistory} mountOnEnter unmountOnExit><Grid item xs={12} md={8} width="100%" maxHeight="600px" alignItems='center' justifyItems='center'>
       <Card sx={{mt:2, mb:4, flexDirection:'col', alignItems:'center', justifyItems:'center'}} position="fixed" styles={{Color:"black"}} padding='4%' paddingTop='4%' margin='4%'>
       <Stack alignItems='center' spacing={2} padding='4%' >
@@ -459,5 +528,4 @@ export default function Home() {
     </Box>
     </div>
   )
-}
-
+            }
