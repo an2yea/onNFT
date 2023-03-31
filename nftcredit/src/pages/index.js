@@ -300,22 +300,6 @@ export default function Home() {
     setLoading(false);
     setMynfts([]);
   }
-
-  const renderButton = () => {
-    if(!walletAddress){
-      return <Button style={{backgroundColor:"white", color:"#45A29E"}} variant="contained" color="inherit" size="medium" onClick={login}> Login </Button>
-    }
-    else{
-        return <Button variant="link" style={{backgroundColor:"white", color:"#45A29E"}}color="inherit" id="account-button" size="medium"> 
-        <p onClick={handleClick} aria-controls="open ? 'account-menu' : undefined" aria-haspopup="true" aria-expanded={open ? 'true':undefined}>{walletAddress} 
-        </p> &nbsp; 
-        <Tooltip title="Click to copy wallet address">
-        <FileCopyIcon onClick={()=>{
-          navigator.clipboard.writeText(`${walletAddress}`);
-        setShowAlert(true);
-    }}/></Tooltip> </Button>} 
-  }
-
   const renderForm = () => {
     if(walletAddress) {
       return <Stack alignItems='center' spacing={2}>
@@ -331,6 +315,21 @@ export default function Home() {
 
         </Stack>
     }
+  }
+
+  const renderButton = () => {
+    if(!walletAddress){
+      return <Button style={{backgroundColor:"white", color:"#45A29E"}} variant="contained" color="inherit" size="medium" onClick={login}> Login </Button>
+    }
+    else{
+        return <Button variant="link" style={{backgroundColor:"white", color:"#45A29E"}}color="inherit" id="account-button" size="medium"> 
+        <p onClick={handleClick} aria-controls="open ? 'account-menu' : undefined" aria-haspopup="true" aria-expanded={open ? 'true':undefined}>{walletAddress} 
+        </p> &nbsp; 
+        <Tooltip title="Click to Copy wallet address">
+        <FileCopyIcon onClick={()=>{
+          navigator.clipboard.writeText(`${walletAddress}`);
+        setShowAlert(true);
+    }}/></Tooltip> </Button>} 
   }
 
   const renderHistory = () => {
