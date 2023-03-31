@@ -6,7 +6,7 @@ import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
 import { borderColor, createTheme } from '@mui/system';
 
-import { CardActionArea } from '@mui/material';
+import { CardActionArea, FormLabel } from '@mui/material';
 
 import {
   AppBar,
@@ -28,7 +28,8 @@ Box,
   CardContent,
   CardMedia,
   TextField,
-  Slide
+  Slide,
+  Snackbar
 } from '@mui/material'
 
 import { SafeOnRampKit, SafeOnRampProviderType } from '@safe-global/onramp-kit'
@@ -40,7 +41,6 @@ import React, { useEffect, useRef, useState }  from 'react'
 import { GaslessOnboarding} from "@gelatonetwork/gasless-onboarding"
 import { CONTRACT_ABI, CONTRACT_ADDRESS } from '../constants/contractdata'
 import { GelatoRelay, SponsoredCallRequest } from "@gelatonetwork/relay-sdk";
-
 
 
 export default function Home() {
@@ -58,7 +58,10 @@ export default function Home() {
   const [web3AuthProvider, setWeb3AuthProvider] = useState(null)
   const [balanceDialog, setBalanceDialog] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
+  
  
+  const imageUrl = "https://play-lh.googleusercontent.com/ZyWNGIfzUyoajtFcD7NhMksHEZh37f-MkHVGr5Yfefa-IX7yj9SMfI82Z7a2wpdKCA"
 
   const open = Boolean(anchorElement)
 
@@ -68,6 +71,7 @@ export default function Home() {
 
   const handleClose = () => {
     setAnchorElement(null);
+    setShowAlert(false);
   }
   const handleClickLogout = () => {
     setAnchorElement(false);
@@ -75,15 +79,15 @@ export default function Home() {
     logout();
   }
 
-  useEffect(()=>{
-    login();
-  }, [])
+  // useEffect(()=>{
+  //   login();
+  // }, [])
 
   useEffect(() =>{
-    console.log("Web3auth changed");
-    fetchUsers();
-  }, [web3AuthProvider])
+    fetchNfts();
+  }, [walletAddress]);
 
+  
   useEffect(() => {
 
     if(taskId){
@@ -102,7 +106,9 @@ export default function Home() {
             console.log("State access inside useeffect", taskStatus)
             if(task.task.taskState == 'Cancelled' || task.task.taskState == 'ExecSuccess'){
               clearInterval(call);
-              fetchUsers();
+              if(task.task.taskState == 'ExecSuccess'){
+                fetchNfts();
+              }
             }
           }
         });
@@ -150,7 +156,7 @@ export default function Home() {
     console.log(sessionData);
   }
   
-    const fetchUsers = async() => {
+    const fetchNfts = async() => {
       try{
       if(web3AuthProvider != undefined){
         const tokens = [];
@@ -244,6 +250,8 @@ export default function Home() {
         return <Alert severity='error'> The Request was Cancelled </Alert>
       case 'ExecReverted':
         return <Alert severity='warning'> The request was Reverted </Alert>
+      case 'Done':
+        return <></>
     }
     }
   }
@@ -252,12 +260,13 @@ export default function Home() {
 
   const mintNFT = async() => {
     try{
-      console.log("in mint")
+      console.log("in mint");
+      console.log(toAddress);
       setLoading(true);
       const relay = new GelatoRelay();
       let iface = new ethers.utils.Interface(CONTRACT_ABI);
       let tokenURI = "ipfs://bafyreidrt5utdvnwonctnojcese7n2lzi4pkcvvtz7mw2ptijbtnb5sfya/metadata.json"
-      let recipient = toAddress;
+      let recipient = toAddress || walletAddress;
       console.log(recipient, tokenURI);
       
       let tx = iface.encodeFunctionData("mintNFT", [ recipient, tokenURI ])
@@ -299,12 +308,17 @@ export default function Home() {
 
   const renderForm = () => {
     if(walletAddress) {
-      return <Stack alignItems='center'>
-          <TextField required sx={{mt:2, mb:2}} width="100%" label="Address to Mint NFT" variant="outlined" name="toAddress" value={toAddress} onChange={(e) => setToAddress(e.target.value)}> </TextField>
+      return <Stack alignItems='center' spacing={2}>
+          <TextField required label="Enter address to Mint NFT On" sx={{mt:2, mb:2}} width="100%" variant="outlined" value={toAddress} onChange={(e) => setToAddress(e.target.value)} />
         <Button
               type="submit"
               variant="contained"
-              sx={{ mt: 2, mb: 2 }} style={{backgroundColor:"#45A29E", color:"white", width:'100%'}} onClick={mintNFT}> Mint NFT</Button></Stack>
+              sx={{ mt: 2, mb: 2 }} style={{backgroundColor:"#45A29E", color:"white", width:'100%'}} onClick={() =>{
+                if(toAddress=="") setToAddress(walletAddress);
+                mintNFT();
+              }}> Mint NFT</Button>
+
+        </Stack>
     }
   }
 
@@ -312,8 +326,9 @@ export default function Home() {
     if(!showHistory){
       return <Slide direction="up" in={!showHistory} mountOnEnter unmountOnExit><Grid item xs={12} md={6}>
         <Card sx={{mt:2, mb:4, flexDirection:'col'}} position="fixed" styles={{Color:"black"}}>
-        <Stack spacing={4} alignItems='center' width='100%' padding='4rem'> 
-        <h1 styles={{fontFamily:'sans-serif', justifyContent:'center'}}> NFT Credit with Gasless Wallet</h1>
+        <Stack spacing={4} alignItems='center' width='100%' padding='2rem'> 
+        <h2 styles={{textAlign:'center'}}> Mint NFTs gaslessly, directly from your credit card!</h2>
+        { !walletAddress && <h3> Please Login to start Minting</h3>}
         {renderForm()}
         {renderAlert()}
         </Stack>
@@ -330,14 +345,20 @@ export default function Home() {
   return (
     <div>
       <Head>
-        <title> NFT Credit </title>
+        <title> onNFT </title>
         <meta name="description" content="Generated by create next app" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/logo.svg" />
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600,300" rel="stylesheet" type="text/css" />
       </Head>
       <Box sx={{mt:3, flexDirection: 'row', justifyContent:'center', alignItems:'center'}}>
-      <AppBar  position="sticky" style={{backgroundColor:"transparent"}}>
-        <Toolbar sx={{ml:'2%'}}variant="regular" >
+      <Snackbar anchorOrigin={{vertical: 'top', horizontal:'center'}} open={showAlert} autoHideDuration={6000} onClose={handleClose}>
+        <Alert onClose={handleClose} severity="success" sx={{ width: '100%' }}>
+          Wallet Address Copied to Clipboard
+        </Alert>
+      </Snackbar>
+      <AppBar sx={{boxShadow:0}} position="sticky" style={{backgroundColor:"transparent"}}>
+        <Toolbar sx={{ml:'2%'}} variant="regular" >
           <img src='images/logo.svg' height='70px' width='50px'/>
           <Typography variant='h6' component='div' sx={{ flexGrow: 1 }}>
             &nbsp; onNFT
@@ -345,11 +366,21 @@ export default function Home() {
         <Stack direction='row' spacing={2}>
           {renderButton()}
         </Stack>
-        <Menu id="account-menu" anchorEl={anchorElement} open={open} MenuListProps ={{'aria-labelledby' : 'account-button,'}} onClose ={handleClose} >
-          <MenuItem onClick={() => setBalanceDialog(true)}> Check Balance </MenuItem>
-          <MenuItem onClick={() => navigator.clipboard.writeText(`${walletAddress}`)}> Copy wallet Address</MenuItem>
-          {showHistory && <MenuItem onClick={() => setShowHistory(false)}> Mint New NFT </MenuItem>}
-          {!showHistory && <MenuItem onClick={() => setShowHistory(true)}> Show My NFTs</MenuItem>}
+        <Menu align-items="right" id="account-menu" anchorEl={anchorElement} open={open} MenuListProps ={{'aria-labelledby' : 'account-button,'}} onClose ={handleClose} >
+          <MenuItem onClick={() => {
+            setAnchorElement(false);
+            setBalanceDialog(true) }}> Check Balance </MenuItem>
+          <MenuItem onClick={() => {
+            navigator.clipboard.writeText(`${walletAddress}`);
+            setShowAlert(true);
+            setAnchorElement(false);
+          }}> Copy wallet Address</MenuItem>
+          {showHistory && <MenuItem onClick={() => {
+            setAnchorElement(false);
+            setShowHistory(false)}}> Mint New NFT </MenuItem>}
+          {!showHistory && <MenuItem onClick={() => {
+            setAnchorElement(false);
+            setShowHistory(true)}}> Show My NFTs</MenuItem>}
           <MenuItem onClick={handleClickLogout}> Log Out </MenuItem>
         </Menu>
         <Dialog open= {balanceDialog} onClose = {() => setBalanceDialog(false)}aria-labelledby='dialog-title' aria-describedby='dialog-desc'>
@@ -376,20 +407,19 @@ export default function Home() {
       {renderHistory()}
       {showHistory && <Slide direction="up" in={showHistory} mountOnEnter unmountOnExit><Grid item xs={12} md={8} width="100%" maxHeight="600px" alignItems='center' justifyItems='center'>
       <Card sx={{mt:2, mb:4, flexDirection:'col', alignItems:'center', justifyItems:'center'}} position="fixed" styles={{Color:"black"}} padding='4%' paddingTop='4%' margin='4%'>
-      <Stack alignItems='center' spacing={4} padding='4%' >
-        <h1> My NFTs</h1>
-        <Typography variant="h3"> {mynfts.length} NFT's in your collection</Typography>
+      <Stack alignItems='center' spacing={2} padding='4%' >
+        <h2> {mynfts.length} NFT's in your collection</h2>
         {!mynfts.length && <h3 color='#45A29E'> Generate and mint your NFT to see them here</h3>}
-        <Grid container spacing={6} maxHeight='600px' alignItems='center' id="history" overflow='auto' > 
+        <Grid container spacing={2} maxHeight='600px' alignItems='center' id="history" overflow='auto' > 
             {mynfts.map(nft => (
-              <Grid item xs={12} sm={6} padding='1%'>
+              <Grid item xs={12} sm={6} md={4} padding='0.5%'>
               <Card sx={{ width:'inherit' ,borderColor:'#5D5DFF', borderWidth:'2px', borderStyle:'solid' }}>
                 <CardActionArea>
                 <CardMedia
                     component="img"
                     height="200"
                     image="next.svg"
-                    alt="green iguana"
+                    alt={nft.metadata.name}
                   />
                   <CardContent sx={{backgroundColor:'#45A29E', color:'white'}}>
                     <Typography gutterBottom variant="h5" component="div">
