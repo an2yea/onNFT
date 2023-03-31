@@ -395,7 +395,8 @@ export default function Home() {
         </Grid>
         </Stack>
         </Card>
-        </Grid></Slide >
+        </Grid>
+        </Slide >
     }
   }
 
