@@ -279,8 +279,7 @@ export default function Home() {
       console.log(gw);
       const temp = await gw.sponsorTransaction(
         CONTRACT_ADDRESS,
-        tx,
-        ethers.utils.parseEther("0.001")
+        tx
       );
 
       setTaskId(temp.taskId, console.log(taskId));
