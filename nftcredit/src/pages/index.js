@@ -59,6 +59,7 @@ export default function Home() {
   const [balanceDialog, setBalanceDialog] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
+  const [showUpdate, setShowUpdate] = useState(false);
   
  
   const imageUrl = "https://play-lh.googleusercontent.com/ZyWNGIfzUyoajtFcD7NhMksHEZh37f-MkHVGr5Yfefa-IX7yj9SMfI82Z7a2wpdKCA"
@@ -72,6 +73,7 @@ export default function Home() {
   const handleClose = () => {
     setAnchorElement(null);
     setShowAlert(false);
+    setShowUpdate(false);
   }
   const handleClickLogout = () => {
     setAnchorElement(false);
@@ -124,7 +126,7 @@ export default function Home() {
 
   useEffect(() => {
     console.log('Task status was changed', taskStatus);
-    renderAlert();
+    setShowUpdate(true);
   }, [taskStatus]);
 
   
@@ -231,27 +233,25 @@ export default function Home() {
     }
   }
 
+    
   const renderAlert = () => {
     if(walletAddress){
     console.log("TaskStatus is", taskStatus);
-    // console.log("here in renderAlert")
     switch(taskStatus){
       case 'Initialised':
-        return <Alert severity='info'> Request created</Alert>
+        return <Alert onClose={handleClose} severity='info'> Request created</Alert>
       case 'CheckPending':
-        return <Alert severity='info'> The Request is being processed (check pending)</Alert>
+        return <Alert onClose={handleClose}  severity='info'> The Request is being processed (check pending)</Alert>
       case 'ExecPending':
-        return <Alert severity='info'> The Request is being processed (execution pending) </Alert>
+        return <Alert onClose={handleClose}  severity='info'> The Request is being processed (execution pending) </Alert>
       case 'WaitingForConfirmation':
-        return <Alert severity='info'> The Request is being processed (waiting for confirmation)</Alert>
+        return <Alert onClose={handleClose} severity='info'> The Request is being processed (waiting for confirmation)</Alert>
       case 'ExecSuccess':
-        return <Alert severity='success'> The Request was successful </Alert>
+        return <Alert onClose={handleClose}  severity='success'> The Request was successful </Alert>
       case 'Cancelled':
-        return <Alert severity='error'> The Request was Cancelled </Alert>
+        return <Alert onClose={handleClose}  severity='error'> The Request was Cancelled </Alert>
       case 'ExecReverted':
-        return <Alert severity='warning'> The request was Reverted </Alert>
-      case 'Done':
-        return <></>
+        return <Alert onClose={handleClose}  severity='warning'> The request was Reverted </Alert>
     }
     }
   }
@@ -299,11 +299,11 @@ export default function Home() {
 
   const renderButton = () => {
     if(!walletAddress){
-      return <Button style={{backgroundColor:"#45A29E", color:"white"}}variant="contained" color="inherit" size="medium" onClick={login}> Login </Button>
+      return <Button style={{backgroundColor:"white", color:"#45A29E"}} variant="contained" color="inherit" size="medium" onClick={login}> Login </Button>
     }
     else{
         console.log("logged in", walletAddress);
-        return <Button style={{backgroundColor:"#45A29E", color:"white"}} variant="contained" color="inherit" id="account-button" size="medium" onClick={handleClick} aria-controls="open ? 'account-menu' : undefined" aria-haspopup="true" aria-expanded={open ? 'true':undefined}> {walletAddress}</Button>} 
+        return <Button variant="link" style={{backgroundColor:"white", color:"#45A29E"}}color="inherit" id="account-button" size="medium" onClick={handleClick} aria-controls="open ? 'account-menu' : undefined" aria-haspopup="true" aria-expanded={open ? 'true':undefined}> {walletAddress}</Button>} 
   }
 
   const renderForm = () => {
@@ -330,7 +330,6 @@ export default function Home() {
         <h2 styles={{textAlign:'center'}}> Mint NFTs gaslessly, directly from your credit card!</h2>
         { !walletAddress && <h3> Please Login to start Minting</h3>}
         {renderForm()}
-        {renderAlert()}
         </Stack>
         <Backdrop
         sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
@@ -357,8 +356,11 @@ export default function Home() {
           Wallet Address Copied to Clipboard
         </Alert>
       </Snackbar>
+      {taskStatus && <Snackbar anchorOrigin={{vertical: 'top', horizontal:'center'}} open={showUpdate} autoHideDuration={8000} onClose={handleClose}>
+        {renderAlert()}
+      </Snackbar>}
       <AppBar sx={{boxShadow:0}} position="sticky" style={{backgroundColor:"transparent"}}>
-        <Toolbar sx={{ml:'2%'}} variant="regular" >
+        <Toolbar sx={{ml:'2%'}} variant="dense" >
           <img src='images/logo.svg' height='70px' width='50px'/>
           <Typography variant='h6' component='div' sx={{ flexGrow: 1 }}>
             &nbsp; onNFT
@@ -408,20 +410,20 @@ export default function Home() {
       {showHistory && <Slide direction="up" in={showHistory} mountOnEnter unmountOnExit><Grid item xs={12} md={8} width="100%" maxHeight="600px" alignItems='center' justifyItems='center'>
       <Card sx={{mt:2, mb:4, flexDirection:'col', alignItems:'center', justifyItems:'center'}} position="fixed" styles={{Color:"black"}} padding='4%' paddingTop='4%' margin='4%'>
       <Stack alignItems='center' spacing={2} padding='4%' >
-        <h2> {mynfts.length} NFT's in your collection</h2>
+        <h2 textcolor="#45A29E"> {mynfts.length} NFT's in your collection</h2>
         {!mynfts.length && <h3 color='#45A29E'> Generate and mint your NFT to see them here</h3>}
         <Grid container spacing={2} maxHeight='600px' alignItems='center' id="history" overflow='auto' > 
             {mynfts.map(nft => (
               <Grid item xs={12} sm={6} md={4} padding='0.5%'>
-              <Card sx={{ width:'inherit' ,borderColor:'#5D5DFF', borderWidth:'2px', borderStyle:'solid' }}>
+              <Card sx={{ width:'inherit' ,borderColor:'rgba(253,193,104,1)', borderWidth:'2px', borderStyle:'solid' }}>
                 <CardActionArea>
                 <CardMedia
                     component="img"
                     height="200"
-                    image="next.svg"
+                    image="images/pikachu.jpeg"
                     alt={nft.metadata.name}
                   />
-                  <CardContent sx={{backgroundColor:'#45A29E', color:'white'}}>
+                  <CardContent sx={{backgroundColor:'rgba(251,128,128,1)', color:'white'}}>
                     <Typography gutterBottom variant="h5" component="div">
                       {nft.metadata.name}
                     </Typography>
