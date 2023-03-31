@@ -357,7 +357,7 @@ export default function Home() {
         <title> asyncNFT </title>
         <meta name="description" content="Buy NFTs seamlessly with Account Abstraction" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="images/logo.svg" />
+        <link rel="icon" href="/images/logo.svg" />
       </Head>
       <Box sx={{mt:3, flexDirection: 'row', justifyContent:'center', alignItems:'center'}}>
       <Snackbar anchorOrigin={{vertical: 'top', horizontal:'center'}} open={showAlert} autoHideDuration={3000} onClose={handleClose}>
