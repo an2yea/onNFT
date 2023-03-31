@@ -82,9 +82,9 @@ export default function Home() {
     logout();
   }
 
-  // useEffect(()=>{
-  //   login();
-  // }, [])
+  useEffect(()=>{
+    login();
+  }, [])
 
   useEffect(() =>{
     fetchNfts();
@@ -410,7 +410,7 @@ export default function Home() {
       {showHistory && <Slide direction="up" in={showHistory} mountOnEnter unmountOnExit><Grid item xs={12} md={8} width="100%" maxHeight="600px" alignItems='center' justifyItems='center'>
       <Card sx={{mt:2, mb:4, flexDirection:'col', alignItems:'center', justifyItems:'center'}} position="fixed" styles={{Color:"black"}} padding='4%' paddingTop='4%' margin='4%'>
       <Stack alignItems='center' spacing={2} padding='4%' >
-        <h2 textcolor="#45A29E"> {mynfts.length} NFT&apos; in your collection</h2>
+        <h2 textcolor="#45A29E"> {mynfts.length} NFT&apos;s in your collection</h2>
         {!mynfts.length && <h3 color='#45A29E'> Generate and mint your NFT to see them here</h3>}
         <Grid container spacing={2} maxHeight='600px' alignItems='center' id="history" overflow='auto' > 
             {mynfts.map(nft => (
