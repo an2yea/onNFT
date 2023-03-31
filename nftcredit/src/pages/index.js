@@ -203,7 +203,7 @@ export default function Home() {
           rpcUrl: "https://wiser-alien-morning.matic-testnet.discover.quiknode.pro/c2f6cfc05517853e094ad7ea47188326625f20b5/",
         },
         openLogin: {
-          redirectUrl: `http://localhost:3000/`,
+          redirectUrl: [window.location.origin],
         },
       };
       const gaslessOnboarding = new GaslessOnboarding(
