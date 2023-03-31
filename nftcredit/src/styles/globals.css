@@ -1,4 +1,7 @@
+@import url('https://fonts.googleapis.com/css?family=Open+Sans');
+
 :root {
+  --background-color: linear-gradient(#000000, #737373);
   --max-width: 1100px;
   --border-radius: 12px;
   --font-mono: ui-monospace, Menlo, Monaco, 'Cascadia Mono', 'Segoe UI Mono',
@@ -43,8 +46,11 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: '#25282C';
-    --background-end-rgb: '#25282C';
+    --background-start-rgb: '#000000';
+    --background-end-rgb: '737373';
+
+  --background-color: linear-gradient(#000000, #737373);
+
 
     --primary-glow: radial-gradient(rgba(1, 65, 255, 0.4), rgba(1, 65, 255, 0));
     --secondary-glow: linear-gradient(
@@ -78,7 +84,7 @@
   padding: 0;
   margin: 0;
   background-color: '#25282C';
-  font-family: sans-serif;
+  font-family: "Open Sans", sans-serif;
 }
 
 html,
@@ -90,13 +96,16 @@ body {
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  /* color: rgb(var(--foreground-rgb)); */
+  color: #45A29E;
+  /* background-image: linear-gradient(to right, #ff8177 0%, #ff867a 0%, #ff8c7f 21%, #f99185 52%, #cf556c 78%, #b12a5b 100%); */
+  /* background-image: linear-gradient(to top, #9890e3 0%, #b1f4cf 100%); */
+  /* background-image: linear-gradient( 90deg,  rgba(255,157,129,1) 24.3%, rgba(255,78,78,1) 78.3% ); */
+  /* background-image: radial-gradient( circle 976px at 51.2% 51%,  rgba(11,27,103,1) 0%, rgba(16,66,157,1) 0%, rgba(11,27,103,1) 17.3%, rgba(11,27,103,1) 58.8%, rgba(11,27,103,1) 71.4%, rgba(16,66,157,1) 100.2%, rgba(187,187,187,1) 100.2% ); */
+  /* background-image: radial-gradient( circle farthest-corner at 10% 20%,  rgba(0,152,155,1) 0.1%, rgba(0,94,120,1) 94.2% ); */
+  /* background-image: radial-gradient( circle 939px at 94.7% 50%,  rgba(0,178,169,1) 0%, rgba(0,106,101,1) 76.9% ); */
+  background-image: radial-gradient( circle farthest-corner at 30% 20%,  rgba(251,128,128,1) 0%, rgba(253,193,104,1) 90% );
+  /* background: linear-gradient(to right, #002B5B, #159895) ; */
 }
 
 a {
