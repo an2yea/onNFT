@@ -44,6 +44,7 @@ import { CONTRACT_ABI, CONTRACT_ADDRESS } from '../constants/contractdata'
 import { GelatoRelay, SponsoredCallRequest } from "@gelatonetwork/relay-sdk";
 import FileCopyIcon from '@mui/icons-material/FileCopy';
 import useMediaQuery from '@mui/material/useMediaQuery';
+import { Catalogue } from './Components/Catalogue';
 
 
 export default function Home() {
@@ -191,9 +192,6 @@ export default function Home() {
     }
     }
 
-  
-  
-
   const login = async() => {
     
     try{
@@ -318,100 +316,13 @@ export default function Home() {
     }}/></Tooltip> </Button>} 
   }
 
-  const renderForm = () => {
-    if(walletAddress) {
-      return <Stack alignItems='center' spacing={2}>
-          <TextField label="Address to Mint NFT On" sx={{mt:2, mb:2}} width="100%" variant="outlined" value={toAddress} onChange={(e) => setToAddress(e.target.value)} />
-        <Button
-              type="submit"
-              variant="contained"
-              sx={{ mt: 2, mb: 2 }} style={{backgroundColor:"#45A29E", color:"white", width:'100%'}} onClick={() =>{
-                if(toAddress=="") setToAddress(walletAddress);
-                mintNFT();
-              }}> Mint NFT</Button>
-          <Typography variant='subtitle'> Leave the field empty to mint on your account </Typography>
-
-        </Stack>
-    }
-  }
-
-  const listing = [
-    {
-      name: 'Pikachu',
-      image: '/images/pikachu.jpeg',
-      price: 'Free'
-    },
-    {
-      name:'Arceus',
-      image:'/images/arceus.png',
-      price: 'Free'
-    },
-    {
-      name:'Bulbsaur',
-      image:'/images/bulbasaur.jpeg',
-      price: 'Free'
-
-    }
-  ]
-
-  const renderListing = () => {
-    if(!showHistory){
-      return <Slide direction="up" in={!showHistory} mountOnEnter unmountOnExit><Grid item xs={12} md={8} width="100%" maxHeight="600px" alignItems='center' justifyItems='center'>
-      <Card sx={{mt:2, mb:4, flexDirection:'col', alignItems:'center', justifyItems:'center'}} position="fixed" styles={{Color:"black"}} padding='4%' margin='4%'>
-      <Stack alignItems='center' spacing={2} padding='4%' >
-        <h2> NFTs to Check Out! </h2>
-        <Grid container spacing={2} maxHeight='600px' alignItems='center' id="history" overflow='auto' > 
-            {listing.map(({name, image, price}) => (
-              <Grid key='1' item xs={12} sm={6} md={4} padding='0.5%'>
-              <Card sx={{ width:'inherit' ,borderColor:'rgba(253,193,104,1)', borderWidth:'2px', borderStyle:'solid' }}>
-                <CardActionArea>
-                <CardMedia
-                    component="img"
-                    height="200"
-                    image={image}
-                    alt={name}
-                  />
-                  <CardContent sx={{backgroundColor:'rgba(251,128,128,1)', color:'white'}}>
-                    <Typography gutterBottom variant="h5" component="div">
-                      {name}
-                    </Typography>
-
-                    <Typography variant="body2" color="#1f2833">
-                      {price}
-                    </Typography>
-                    <Button
-                    type="submit"
-                    variant="contained"
-                  sx={{ mt: 2, mb: 2 }} style={{backgroundColor:"#45A29E", color:"white", width:'100%'}} onClick={() =>{
-                if(toAddress=="") setToAddress(walletAddress);
-                mintNFT();
-              }}> Mint {name} </Button>
-                  </CardContent>
-                </CardActionArea>
-              </Card>
-              </ Grid>
-            ))}
-        </Grid>
-        </Stack>
-        </Card>
-        </Grid>
-        </Slide >
-    }
-  }
-
   const renderHistory = () => {
     if(!showHistory){
       return <Slide direction="up" in={!showHistory} mountOnEnter unmountOnExit><Grid item xs={12} md={6}>
         <Card sx={{mt:2, mb:4, flexDirection:'col'}} position="fixed" styles={{Color:"black"}}>
-        <Stack spacing={4} alignItems='center' width='100%' padding='2rem'> 
-        <h2 styles={{textAlign:'center'}}> Mint NFTs gaslessly, directly from your credit card!</h2>
-        { !walletAddress && <h3> Please Login to start Minting</h3>}
-        {renderForm()}
-        </Stack>
-        <Backdrop
-        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
-        open={loading}>
-        <CircularProgress color="inherit" /></Backdrop>
+        {!walletAddress &&  <Stack spacing={4} alignItems='center' width='100%' padding='2rem'> 
+        <h3> Please Login to start Minting</h3> </Stack>}
+        {walletAddress && <Catalogue />}
         </ Card>
         </Grid>
         </Slide>
@@ -421,7 +332,7 @@ export default function Home() {
   return (
     <div>
       <Head>
-        <title> asyncNFT </title>
+        <title> onNFT </title>
         <meta name="description" content="Buy NFTs seamlessly with Account Abstraction" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="images/logo.svg" />
@@ -448,11 +359,6 @@ export default function Home() {
           <MenuItem onClick={() => {
             setAnchorElement(false);
             setBalanceDialog(true) }}> Check Balance </MenuItem>
-          {/* <MenuItem onClick={() => {
-            navigator.clipboard.writeText(`${walletAddress}`);
-            setShowAlert(true);
-            setAnchorElement(false);
-          }}> Copy wallet Address</MenuItem> */}
           {showHistory && <MenuItem onClick={() => {
             setAnchorElement(false);
             setShowHistory(false)}}> Mint New NFT </MenuItem>}
@@ -483,7 +389,6 @@ export default function Home() {
       
       <Grid container flexDirection='column' alignItems='center' spacing={4} paddingLeft='2%' paddingRight='2%' >
       {renderHistory()}
-      {renderListing()}
       {showHistory && <Slide direction="up" in={showHistory} mountOnEnter unmountOnExit><Grid item xs={12} md={8} width="100%" maxHeight="600px" alignItems='center' justifyItems='center'>
       <Card sx={{mt:2, mb:4, flexDirection:'col', alignItems:'center', justifyItems:'center'}} position="fixed" styles={{Color:"black"}} padding='4%' paddingTop='4%' margin='4%'>
       <Stack alignItems='center' spacing={2} padding='4%' >
