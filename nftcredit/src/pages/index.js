@@ -322,7 +322,7 @@ export default function Home() {
         <Card sx={{mt:2, mb:4, flexDirection:'col'}} position="fixed" styles={{Color:"black"}}>
         {!walletAddress &&  <Stack spacing={4} alignItems='center' width='100%' padding='2rem'> 
         <h3> Please Login to start Minting</h3> </Stack>}
-        {walletAddress && <Catalogue />}
+        {walletAddress && <Catalogue mintNFT={mintNFT}/>}
         </ Card>
         </Grid>
         </Slide>

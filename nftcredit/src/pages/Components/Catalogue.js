@@ -35,7 +35,7 @@ const listing = [
 
   const open = Boolean(true);
 
-  export const Catalogue = () => {
+  export const Catalogue = ({mintNFT}) => {
       return  <Stack alignItems='center' spacing={2} width='100%' padding='2rem'>
         <h2> NFTs to Check Out! </h2>
         <Grid container spacing={2} maxHeight='600px' alignItems='center' id="history" overflow='auto' > 
@@ -61,9 +61,9 @@ const listing = [
                     type="submit"
                     variant="contained"
                   sx={{ mt: 2, mb: 2 }} style={{backgroundColor:"#45A29E", color:"white", width:'100%'}} 
-                //   onClick={() =>{
+                  onClick={() => {
                 // if(toAddress=="") setToAddress(walletAddress);
-                // mintNFT();}}
+                 mintNFT();}}
                 > Mint {name} </Button>
                   </CardContent>
                 </CardActionArea>
