@@ -45,7 +45,7 @@ import { GelatoRelay, SponsoredCallRequest } from "@gelatonetwork/relay-sdk";
 import FileCopyIcon from '@mui/icons-material/FileCopy';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { Catalogue } from './Components/Catalogue';
-
+import { listing } from './Components/Listing';
 
 export default function Home() {
 
@@ -86,9 +86,9 @@ export default function Home() {
     logout();
   }
 
-  useEffect(()=>{
-    login();
-  }, [])
+  // useEffect(()=>{
+  //   login();
+  // }, [])
 
   useEffect(() =>{
     fetchNfts();
@@ -181,8 +181,14 @@ export default function Home() {
         for(var i=0; i<bal;++i){
           const tokenId = await nftContract.tokenOfOwnerByIndex(walletAddress, i);
           const tokenURI = await nftContract.tokenURI(tokenId);
-          const metadata = await fetch(`https://ipfs.io/ipfs/${tokenURI.substr(7)}`).then(response => response.json());
-          tokens.push({tokenId, tokenURI, metadata});
+          const num = tokenURI.lastIndexOf('/');
+          const loc = tokenURI.substr(num+1);
+          const newtokenURI = tokenURI.substr(0,num);
+          console.log(newtokenURI);
+          console.log(tokenURI);
+          console.log(loc);
+          const metadata = await fetch(`https://ipfs.io/ipfs/${newtokenURI.substr(7)}`).then(response => response.json());
+          tokens.push({tokenId, tokenURI, metadata, loc});
         }
         console.log("Hello ji",tokens);
         setMynfts(tokens);
@@ -260,14 +266,19 @@ export default function Home() {
   
   
 
-  const mintNFT = async() => {
+  const mintNFT = async({index}) => {
     try{
-      console.log("in mint");
-      console.log(toAddress);
+      console.log("Index is" , index);
       setLoading(true);
       const relay = new GelatoRelay();
       let iface = new ethers.utils.Interface(CONTRACT_ABI);
-      let tokenURI = "ipfs://bafyreidrt5utdvnwonctnojcese7n2lzi4pkcvvtz7mw2ptijbtnb5sfya/metadata.json";
+      let tokenURI = `ipfs://bafyreidrt5utdvnwonctnojcese7n2lzi4pkcvvtz7mw2ptijbtnb5sfya/metadata.json/${index}` ;
+      console.log(tokenURI);
+      const num = tokenURI.lastIndexOf('/');
+      const loc = tokenURI.substr(num+1);
+      const newtokenURI = tokenURI.substr(0,num);
+      console.log(newtokenURI);
+      console.log(typeof(loc));
       let recipient = toAddress 
       if(!recipient){
         recipient = walletAddress;
@@ -328,6 +339,7 @@ export default function Home() {
         </Slide>
     }
   }
+
 
   return (
     <div>
@@ -402,15 +414,15 @@ export default function Home() {
                 <CardMedia
                     component="img"
                     height="200"
-                    image="images/pikachu.jpeg"
+                    image={listing[Number(nft.loc)].image}
                     alt={nft.metadata.name}
                   />
                   <CardContent sx={{backgroundColor:'rgba(251,128,128,1)', color:'white'}}>
                     <Typography gutterBottom variant="h5" component="div">
-                      {nft.metadata.name}
+                    {listing[Number(nft.loc)].name}
                     </Typography>
                     <Typography variant="body2" color="#1f2833">
-                      Here is your NFT on the beach!
+                      Here is your NFT of  {listing[Number(nft.loc)].name}
                     </Typography>
                   </CardContent>
                 </CardActionArea>
